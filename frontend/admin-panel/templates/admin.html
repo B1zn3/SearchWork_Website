@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Работа.ру</title>
+    <link rel="stylesheet" href="/admin/static/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-top: 1.5rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .table-container:hover {
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 0.95rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1.25rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .data-table th:first-child {
+            border-top-left-radius: 16px;
+        }
+
+        .data-table th:last-child {
+            border-top-right-radius: 16px;
+        }
+
+        .data-table tbody tr {
+            transition: all 0.3s ease;
+            position: relative;
+            background: white;
+        }
+
+        .data-table tbody tr:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        .data-table tbody tr:nth-child(even):hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table td:first-child {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .data-table td:nth-child(2) {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .data-table td:nth-child(3) {
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-card:nth-child(1) .stat-icon {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .stat-card:nth-child(2) .stat-icon {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .stat-content h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 0.25rem 0;
+        }
+
+        .stat-content p {
+            color: #64748b;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-badge.новая {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-badge.рассматривается {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.принята {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-badge.отклонена {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+            font-weight: 600;
+        }
+
+        .data-table td:nth-child(4) {
+            color: #64748b;
+            line-height: 1.5;
+            max-width: 300px;
+        }
+
+        .data-table td:nth-child(5) {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .data-table .btn-sm {
+            padding: 0.6rem;
+            font-size: 0.875rem;
+            border-radius: 8px;
+            margin-right: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+        }
+
+        .data-table .btn-sm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .data-table .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .data-table .btn-info:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        .data-table .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .data-table .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .data-table .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .data-table .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .salary-amount {
+            font-weight: 700;
+            color: #059669;
+            font-size: 1rem;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            display: inline-block;
+            border: 1px solid #a7f3d0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .data-table tbody tr td[colspan] {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #64748b;
+            font-size: 1.1rem;
+            background: #f8fafc;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            color: #374151;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #1f2937;
+        }
+
+        .section-header h2::before {
+            content: '';
+            width: 3px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+
+        .section-header .btn {
+            background: #3b82f6;
+            border: 1px solid #2563eb;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .section-header .btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .cell-icon {
+            color: #64748b;
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .requirements-cell {
+            max-width: 300px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .requirements-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            color: #374151;
+            border-color: #9ca3af;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .data-table tbody tr {
+            animation: fadeInUp 0.3s ease forwards;
+        }
+
+        .data-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+        .data-table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+        .data-table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+        .data-table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+        .data-table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+                border-radius: 12px;
+            }
+            
+            .data-table {
+                min-width: 600px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 1rem 0.75rem;
+                font-size: 0.9rem;
+            }
+            
+            .data-table .btn-sm {
+                padding: 0.5rem;
+                min-width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .close:hover {
+            background-color: #f3f4f6;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            text-align: right;
+        }
+
+        .modal-footer .btn {
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Админ-панель</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Дашборд</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#jobs" class="nav-link" data-section="jobs">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Вакансии</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#applications" class="nav-link" data-section="applications">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Заявки</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#settings" class="nav-link" data-section="settings">
+                            <i class="fas fa-cog"></i>
+                            <span>Настройки</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title">Дашборд</h1>
+                </div>
+                <div class="header-right">
+                    <div class="admin-info">
+                        <span class="admin-name">Администратор</span>
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Активные вакансии</h3>
+                            <p class="stat-number" id="totalJobs">0</p>
+                            <span class="stat-change positive">+2 за неделю</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Новые заявки</h3>
+                            <p class="stat-number" id="pendingApplications">0</p>
+                            <span class="stat-change positive">+5 сегодня</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Одобренные</h3>
+                            <p class="stat-number" id="approvedApplications">0</p>
+                            <span class="stat-change positive">+3 за неделю</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Отклоненные</h3>
+                            <p class="stat-number" id="rejectedApplications">0</p>
+                            <span class="stat-change negative">+1 за неделю</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-charts">
+                    <div class="chart-container">
+                        <h3>Статистика заявок</h3>
+                    </div>
+                </div>
+
+                <div class="recent-applications">
+                    <h3>Последние заявки</h3>
+                    <div id="recentApplicationsList" class="applications-list">
+                        <!-- Recent applications will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Jobs Section -->
+            <section id="jobs" class="content-section">
+                <div class="section-header">
+                    <h2>Управление вакансиями</h2>
+                    <button class="btn btn-primary" onclick="showAddJobModal()">
+                        <i class="fas fa-plus"></i> Добавить вакансию
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="jobsTable">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Локация</th>
+                                <th>Зарплата (BYN)</th>
+                                <th>Требования</th>
+                                <th>Дата публикации</th>
+                                <th>Медиа файлы</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobsTableBody">
+                            <!-- Jobs will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Applications Section -->
+            <section id="applications" class="content-section">
+                <div class="section-header">
+                    <h2>Управление заявками</h2>
+                </div>
+                
+                <!-- Filters -->
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label for="statusFilter">Статус:</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="">Все статусы</option>
+                            <option value="pending">Ожидает рассмотрения</option>
+                            <option value="approved">Одобрено</option>
+                            <option value="rejected">Отклонено</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="jobFilter">Вакансия:</label>
+                        <select id="jobFilter" class="filter-select">
+                            <option value="">Все вакансии</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="dateFromFilter">Дата от:</label>
+                        <input type="date" id="dateFromFilter" class="filter-input">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="dateToFilter">Дата до:</label>
+                        <input type="date" id="dateToFilter" class="filter-input">
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i> Применить фильтры
+                    </button>
+                    
+                    <button class="btn btn-outline" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Очистить
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="applicationsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Вакансия</th>
+                                <th>ФИО</th>
+                                <th>Email</th>
+                                <th>Телефон</th>
+                                <th>Опыт</th>
+                                <th>Дата подачи</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicationsTableBody">
+                            <!-- Applications will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <div class="section-header">
+                    <h2>Настройки сайта</h2>
+                </div>
+                
+                <form id="settingsForm" class="settings-form">
+                    <div class="form-group">
+                        <label for="siteEmail">Email сайта:</label>
+                        <input type="email" id="siteEmail" name="siteEmail" class="form-input" placeholder="info@jobfinder.ru">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sitePhone">Телефон сайта:</label>
+                        <input type="tel" id="sitePhone" name="sitePhone" class="form-input" placeholder="+7 (999) 123-45-67">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="siteAddress">Адрес сайта:</label>
+                        <input type="text" id="siteAddress" name="siteAddress" class="form-input" placeholder="г. Москва, ул. Примерная, д. 123">
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Сохранить настройки
+                    </button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Job Modal -->
+    <div id="addJobModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Добавить вакансию</h3>
+                <span class="close" onclick="closeModal('addJobModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addJobForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="jobTitle">Название вакансии:</label>
+                        <input type="text" id="jobTitle" name="title" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobDescription">Описание:</label>
+                        <textarea id="jobDescription" name="description" class="form-textarea" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobLocation">Локация:</label>
+                        <input type="text" id="jobLocation" name="location" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobSalary">Зарплата:</label>
+                        <input type="number" id="jobSalary" name="salary" class="form-input" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobRequirements">Требования:</label>
+                        <textarea id="jobRequirements" name="Requirements" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobConditions">Условия и льготы:</label>
+                        <textarea id="jobConditions" name="Conditions_and_benefits" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobImages">Фотографии:</label>
+                        <input type="file" id="jobImages" name="images" class="form-input" multiple accept="image/*">
+                        <small>Можно выбрать несколько изображений (JPG, PNG, GIF)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobVideos">Видео:</label>
+                        <input type="file" id="jobVideos" name="videos" class="form-input" multiple accept="video/*">
+                        <small>Можно выбрать несколько видео (MP4, AVI, MOV)</small>
+                    </div>
+                    
+                    <div id="previewContainer" style="display: none; margin-top: 1rem;">
+                        <h4>Предварительный просмотр:</h4>
+                        <div id="imagePreview" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;"></div>
+                        <div id="videoPreview" style="display: flex; gap: 1rem; flex-wrap: wrap;"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addJobModal')">Отмена</button>
+                <button class="btn btn-primary" onclick="submitAddJob()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Job Modal -->
+    <div id="editJobModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Редактировать вакансию</h3>
+                <span class="close" onclick="closeModal('editJobModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editJobForm">
+                    <input type="hidden" id="editJobId" name="editJobId">
+                    <div class="form-group">
+                        <label for="editJobTitle">Название вакансии:</label>
+                        <input type="text" id="editJobTitle" name="editJobTitle" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobDescription">Описание:</label>
+                        <textarea id="editJobDescription" name="editJobDescription" class="form-textarea" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobLocation">Локация:</label>
+                        <input type="text" id="editJobLocation" name="editJobLocation" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobSalary">Зарплата:</label>
+                        <input type="number" id="editJobSalary" name="editJobSalary" class="form-input" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobRequirements">Требования:</label>
+                        <textarea id="editJobRequirements" name="editJobRequirements" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobConditions">Условия и льготы:</label>
+                        <textarea id="editJobConditions" name="editJobConditions" class="form-textarea" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editJobModal')">Отмена</button>
+                <button class="btn btn-primary" onclick="submitEditJob()">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application View Modal -->
+    <div id="applicationViewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Детали заявки</h3>
+                <span class="close" onclick="closeModal('applicationViewModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="application-details">
+                    <div class="detail-row">
+                        <label>ФИО:</label>
+                        <span id="appViewName">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Email:</label>
+                        <span id="appViewEmail">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Телефон:</label>
+                        <span id="appViewPhone">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Вакансия:</label>
+                        <span id="appViewJob">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Дата подачи:</label>
+                        <span id="appViewDate">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Опыт работы:</label>
+                        <span id="appViewExperience">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="approveApplicationBtn">
+                    <i class="fas fa-check"></i> Одобрить
+                </button>
+                <button class="btn btn-danger" id="rejectApplicationBtn">
+                    <i class="fas fa-times"></i> Отклонить
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('applicationViewModal')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+                const API_BASE_URL = 'http://localhost:8000/admin-panel';
+        
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const dashboardSection = document.getElementById('dashboard');
+        const jobsSection = document.getElementById('jobs');
+        const applicationsSection = document.getElementById('applications');
+        const settingsSection = document.getElementById('settings');
+
+        let jobsData = [];
+        let applicationsData = [];
+        let currentApplicationId = null;
+
+        function showSection(sectionId) {
+            [dashboardSection, jobsSection, applicationsSection, settingsSection].forEach(section => {
+                if (section) section.style.display = 'none';
+            });
+            
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+            
+            navLinks.forEach(link => link.classList.remove('active'));
+            const activeLink = document.querySelector(`[data-section="${sectionId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            const pageTitle = document.querySelector('.page-title');
+            switch(sectionId) {
+                case 'dashboard':
+                    pageTitle.textContent = 'Дашборд';
+                    loadDashboard();
+                    break;
+                case 'jobs':
+                    pageTitle.textContent = 'Вакансии';
+                    loadJobsTable();
+                    break;
+                case 'applications':
+                    pageTitle.textContent = 'Заявки';
+                    loadApplicationsTable();
+                    break;
+                case 'settings':
+                    pageTitle.textContent = 'Настройки';
+                    loadSettings();
+                    break;
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const jobsResponse = await fetch(`${API_BASE_URL}/jobs`);
+                const applicationsResponse = await fetch(`${API_BASE_URL}/applications`);
+                
+                let jobsCount = 0;
+                let applicationsCount = 0;
+                
+                if (jobsResponse.ok) {
+                    const jobs = await jobsResponse.json();
+                    jobsCount = jobs.length;
+                }
+                
+                if (applicationsResponse.ok) {
+                    const applications = await applicationsResponse.json();
+                    applicationsCount = applications.length;
+                }
+                
+                const statsContainer = document.querySelector('.dashboard-stats');
+                if (statsContainer) {
+                    statsContainer.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>${jobsCount}</h3>
+                                <p>Активных вакансий</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>${applicationsCount}</h3>
+                                <p>Заявок</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки дашборда:', error);
+            }
+        }
+
+        async function loadApplicationsTable() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/applications`);
+                
+                if (response.ok) {
+                    const applications = await response.json();
+                    renderApplicationsTable(applications);
+                } else {
+                    console.error('Ошибка API:', response.status, response.statusText);
+                    showNotification(`Ошибка API: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки заявок:', error);
+                showNotification('Ошибка загрузки заявок', 'error');
+            }
+        }
+
+        function renderApplicationsTable(applications) {
+            const tbody = document.querySelector('#applicationsTable tbody');
+            if (!tbody) {
+                console.error('Элемент #applicationsTable tbody не найден');
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            if (!applications || applications.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem 1rem;">
+                            <div style="color: #64748b; font-size: 1.1rem;">
+                                <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1; opacity: 0.5;"></i>
+                                <p style="margin-bottom: 0.5rem; font-weight: 500;">Нет заявок для отображения</p>
+                                <p style="font-size: 0.9rem; opacity: 0.7;">Заявки появятся здесь после подачи кандидатами</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            applications.forEach((application, index) => {
+                const row = document.createElement('tr');
+                const createdDate = application.created_at ? new Date(application.created_at).toLocaleDateString('ru-RU') : 'Дата не указана';
+                const status = application.status || 'Новая';
+                
+                row.innerHTML = `
+                    <td>${application.fio || 'Не указано'}</td>
+                    <td>${application.email || 'Не указано'}</td>
+                    <td>${application.phone || 'Не указано'}</td>
+                    <td>${application.experience || 'Не указано'}</td>
+                    <td><span class="status-badge ${status.toLowerCase()}">${status}</span></td>
+                    <td><i class="fas fa-calendar-alt cell-icon"></i>${createdDate}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        async function loadSettings() {
+            try {
+                response = await fetch(`${API_BASE_URL}/settings`);
+                
+                if (response.ok) {
+                    const settings = await response.json();
+                    if (settings && settings.length > 0) {
+                        const setting = settings[0];
+                        document.getElementById('siteEmail').value = setting.site_email || '';
+                        document.getElementById('sitePhone').value = setting.site_phone || '';
+                        document.getElementById('siteAddress').value = setting.site_adress || '';
+                    }
+                } else {
+                    console.error('Ошибка загрузки настроек:', response.status);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки настроек:', error);
+            }
+        }
+
+        async function saveSettings() {
+            const form = document.getElementById('settingsForm');
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        site_email: formData.get('siteEmail'),
+                        site_phone: formData.get('sitePhone'),
+                        site_adress: formData.get('siteAddress')
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Настройки успешно сохранены', 'success');
+                } else {
+                    const errorData = await response.json();
+                    showNotification(`Ошибка сохранения: ${errorData.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка сохранения настроек:', error);
+                showNotification('Ошибка сохранения настроек', 'error');
+            }
+        }
+
+        async function loadJobsTable() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/jobs`);
+                
+                if (response.ok) {
+                    jobsData = await response.json();
+                    renderJobsTable(jobsData);
+                } else {
+                    console.error('Ошибка API:', response.status, response.statusText);
+                    showNotification(`Ошибка API: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки вакансий:', error);
+                showNotification('Ошибка загрузки вакансий', 'error');
+            }
+        }
+
+        function renderJobsTable(jobs) {
+            const tbody = document.querySelector('#jobsTable tbody');
+            if (!tbody) {
+                console.error('Элемент #jobsTable tbody не найден');
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            if (!jobs || jobs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem 1rem;">
+                            <div style="color: #64748b; font-size: 1.1rem;">
+                                <i class="fas fa-briefcase" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1; opacity: 0.5;"></i>
+                                <p style="margin-bottom: 0.5rem; font-weight: 500;">Нет вакансий для отображения</p>
+                                <p style="font-size: 0.9rem; opacity: 0.7;">Добавьте первую вакансию, нажав кнопку выше</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            jobs.forEach((job, index) => {
+                const row = document.createElement('tr');
+                
+                const title = job.title || 'Название не указано';
+                const location = job.location || 'Локация не указана';
+                const salary = job.salary ? `${job.salary.toLocaleString()} BYN` : 'Зарплата не указана';
+                const requirements = job.requirements || job.Requirements || 'Требования не указаны';
+                const createdDate = job.created_at ? new Date(job.created_at).toLocaleDateString('ru-RU') : 'Дата не указана';
+                
+                const requirementsText = requirements.length > 80 ? 
+                    requirements.substring(0, 80) + '...' : requirements;
+                
+                const locationWithIcon = `<i class="fas fa-map-marker-alt cell-icon"></i>${location}`;
+                
+                const dateWithIcon = `<i class="fas fa-calendar-alt cell-icon"></i>${createdDate}`;
+                
+                const images = job.images || [];
+                const videos = job.videos || [];
+                let mediaDisplay = '';
+                
+                if (images.length > 0 || videos.length > 0) {
+                    mediaDisplay = `
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            ${images.length > 0 ? `
+                                <span style="display: flex; align-items: center; gap: 0.25rem; color: #059669; font-size: 0.8rem;">
+                                    <i class="fas fa-image"></i>
+                                    <span>${images.length}</span>
+                                </span>
+                            ` : ''}
+                            ${videos.length > 0 ? `
+                                <span style="display: flex; align-items: center; gap: 0.25rem; color: #3b82f6; font-size: 0.8rem;">
+                                    <i class="fas fa-video"></i>
+                                    <span>${videos.length}</span>
+                                </span>
+                            ` : ''}
+                        </div>
+                    `;
+                } else {
+                    mediaDisplay = '<span style="color: #9ca3af; font-size: 0.8rem;">Нет медиа</span>';
+                }
+                
+                row.innerHTML = `
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            <span class="status-indicator"></span>
+                            <strong style="color: #1e293b;">${title}</strong>
+                        </div>
+                    </td>
+                    <td>${locationWithIcon}</td>
+                    <td><span class="salary-amount">${salary}</span></td>
+                    <td>
+                        <div class="requirements-cell">
+                            <div class="requirements-text">${requirementsText}</div>
+                        </div>
+                    </td>
+                    <td>${dateWithIcon}</td>
+                    <td>${mediaDisplay}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-info" onclick="editJob(${job.id})" title="Редактировать вакансию">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteJob(${job.id})" title="Удалить вакансию">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                row.style.animationDelay = `${index * 0.1}s`;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function editJob(jobId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+                
+                if (response.ok) {
+                    const job = await response.json();
+                    
+                    document.getElementById('editJobId').value = job.id;
+                    document.getElementById('editJobTitle').value = job.title;
+                    document.getElementById('editJobDescription').value = job.description;
+                    document.getElementById('editJobLocation').value = job.location;
+                    document.getElementById('editJobSalary').value = job.salary;
+                    document.getElementById('editJobRequirements').value = job.Requirements || '';
+                    document.getElementById('editJobConditions').value = job.Conditions_and_benefits || '';
+                    
+                    document.getElementById('editJobModal').style.display = 'block';
+                } else {
+                    showNotification('Ошибка загрузки данных вакансии', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка редактирования вакансии:', error);
+                showNotification('Ошибка редактирования вакансии', 'error');
+            }
+        }
+
+        async function submitEditJob() {
+            const jobId = document.getElementById('editJobId').value;
+            const jobData = {
+                title: document.getElementById('editJobTitle').value,
+                description: document.getElementById('editJobDescription').value,
+                location: document.getElementById('editJobLocation').value,
+                salary: parseFloat(document.getElementById('editJobSalary').value),
+                Requirements: document.getElementById('editJobRequirements').value,
+                Conditions_and_benefits: document.getElementById('editJobConditions').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jobData)
+                });
+
+                if (response.ok) {
+                    showNotification('Вакансия успешно обновлена', 'success');
+                    closeModal('editJobModal');
+                    loadJobsTable();
+                } else {
+                    const errorData = await response.json();
+                    showNotification(`Ошибка обновления: ${errorData.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка обновления вакансии:', error);
+                showNotification('Ошибка обновления вакансии', 'error');
+            }
+        }
+
+        async function deleteJob(jobId) {
+            if (!confirm('Вы уверены, что хотите удалить эту вакансию?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showNotification('Вакансия успешно удалена', 'success');
+                    loadJobsTable();
+                } else {
+                    const errorData = await response.json();
+                    showNotification(`Ошибка удаления: ${errorData.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка удаления вакансии:', error);
+                showNotification('Ошибка удаления вакансии', 'error');
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const sectionId = this.getAttribute('data-section');
+                    showSection(sectionId);
+                });
+            });
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                });
+            }
+
+            showSection('dashboard');
+        });
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 3000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                background: ${type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#2563eb'};
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        function showAddJobModal() {
+            document.getElementById('addJobModal').style.display = 'block';
+            setupFilePreviews();
+        }
+
+        function setupFilePreviews() {
+            const imageInput = document.getElementById('jobImages');
+            const videoInput = document.getElementById('jobVideos');
+            const previewContainer = document.getElementById('previewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const videoPreview = document.getElementById('videoPreview');
+
+            imageInput.addEventListener('change', function(e) {
+                imagePreview.innerHTML = '';
+                const files = Array.from(e.target.files);
+                
+                if (files.length > 0) {
+                    previewContainer.style.display = 'block';
+                    
+                    files.forEach(file => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const img = document.createElement('img');
+                                img.src = e.target.result;
+                                img.style.cssText = 'width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb;';
+                                imagePreview.appendChild(img);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            });
+
+            videoInput.addEventListener('change', function(e) {
+                videoPreview.innerHTML = '';
+                const files = Array.from(e.target.files);
+                
+                if (files.length > 0) {
+                    previewContainer.style.display = 'block';
+                    
+                    files.forEach(file => {
+                        if (file.type.startsWith('video/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const videoContainer = document.createElement('div');
+                                videoContainer.style.cssText = 'width: 200px; margin-bottom: 1rem;';
+                                
+                                const video = document.createElement('video');
+                                video.src = e.target.result;
+                                video.controls = true;
+                                video.style.cssText = 'width: 100%; border-radius: 8px;';
+                                
+                                const fileName = document.createElement('p');
+                                fileName.textContent = file.name;
+                                fileName.style.cssText = 'font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem; text-align: center;';
+                                
+                                videoContainer.appendChild(video);
+                                videoContainer.appendChild(fileName);
+                                videoPreview.appendChild(videoContainer);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            });
+        }
+
+        async function submitAddJob() {
+            const form = document.getElementById('addJobForm');
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/new_job`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Вакансия успешно добавлена', 'success');
+                    closeModal('addJobModal');
+                    form.reset();
+                    document.getElementById('previewContainer').style.display = 'none';
+                    loadJobsTable();
+                } else {
+                    const errorData = await response.json();
+                    showNotification(`Ошибка добавления: ${errorData.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка добавления вакансии:', error);
+                showNotification('Ошибка добавления вакансии', 'error');
+            }
+        }
+    </script>
+</body>
+</html> 
