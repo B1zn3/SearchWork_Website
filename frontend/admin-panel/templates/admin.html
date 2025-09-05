@@ -183,8 +183,6 @@
             background: #fee2e2;
             color: #dc2626;
         }
-            font-weight: 600;
-        }
 
         .data-table td:nth-child(4) {
             color: #64748b;
@@ -644,7 +642,6 @@
                         <div class="stat-content">
                             <h3>Активные вакансии</h3>
                             <p class="stat-number" id="totalJobs">0</p>
-                            <span class="stat-change positive">+2 за неделю</span>
                         </div>
                     </div>
                     
@@ -653,31 +650,8 @@
                             <i class="fas fa-file-alt"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>Новые заявки</h3>
+                            <h3>Активные заявки</h3>
                             <p class="stat-number" id="pendingApplications">0</p>
-                            <span class="stat-change positive">+5 сегодня</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3>Одобренные</h3>
-                            <p class="stat-number" id="approvedApplications">0</p>
-                            <span class="stat-change positive">+3 за неделю</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-times-circle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3>Отклоненные</h3>
-                            <p class="stat-number" id="rejectedApplications">0</p>
-                            <span class="stat-change negative">+1 за неделю</span>
                         </div>
                     </div>
                 </div>
@@ -685,13 +659,6 @@
                 <div class="dashboard-charts">
                     <div class="chart-container">
                         <h3>Статистика заявок</h3>
-                    </div>
-                </div>
-
-                <div class="recent-applications">
-                    <h3>Последние заявки</h3>
-                    <div id="recentApplicationsList" class="applications-list">
-                        <!-- Recent applications will be loaded here -->
                     </div>
                 </div>
             </section>
@@ -714,12 +681,10 @@
                                 <th>Зарплата (BYN)</th>
                                 <th>Требования</th>
                                 <th>Дата публикации</th>
-                                <th>Медиа файлы</th>
                                 <th>Действия</th>
                             </tr>
                         </thead>
                         <tbody id="jobsTableBody">
-                            <!-- Jobs will be loaded here -->
                         </tbody>
                     </table>
                 </div>
@@ -733,52 +698,26 @@
                 
                 <!-- Filters -->
                 <div class="filters-container">
-                    <div class="filter-group">
-                        <label for="statusFilter">Статус:</label>
-                        <select id="statusFilter" class="filter-select">
-                            <option value="">Все статусы</option>
-                            <option value="pending">Ожидает рассмотрения</option>
-                            <option value="approved">Одобрено</option>
-                            <option value="rejected">Отклонено</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="jobFilter">Вакансия:</label>
-                        <select id="jobFilter" class="filter-select">
-                            <option value="">Все вакансии</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="dateFromFilter">Дата от:</label>
-                        <input type="date" id="dateFromFilter" class="filter-input">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="dateToFilter">Дата до:</label>
-                        <input type="date" id="dateToFilter" class="filter-input">
-                    </div>
-                    
-                    <button class="btn btn-secondary" onclick="applyFilters()">
-                        <i class="fas fa-filter"></i> Применить фильтры
-                    </button>
-                    
-                    <button class="btn btn-outline" onclick="clearFilters()">
-                        <i class="fas fa-times"></i> Очистить
-                    </button>
+                <div class="filter-group">
+                    <label for="statusFilter">Статус:</label>
+                    <select id="statusFilter" class="filter-select" onchange="filterApplications()">
+                        <option value="">Все статусы</option>
+                        <option value="pending">Ожидает рассмотрения</option>
+                        <option value="approved">Одобрено</option>
+                        <option value="rejected">Отклонено</option>
+                    </select>
+                </div>
                 </div>
                 
                 <div class="table-container">
                     <table class="data-table" id="applicationsTable">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Вакансия</th>
                                 <th>ФИО</th>
                                 <th>Email</th>
                                 <th>Телефон</th>
                                 <th>Опыт</th>
+                                <th>Статус</th>
                                 <th>Дата подачи</th>
                                 <th>Действия</th>
                             </tr>
@@ -812,7 +751,7 @@
                         <input type="text" id="siteAddress" name="siteAddress" class="form-input" placeholder="г. Москва, ул. Примерная, д. 123">
                     </div>
                     
-                    <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                    <button class="btn btn-primary" onclick="updateSettings()">
                         <i class="fas fa-save"></i> Сохранить настройки
                     </button>
                 </form>
@@ -980,561 +919,6 @@
         </div>
     </div>
 
-    <script>
-                const API_BASE_URL = 'http://localhost:8000/admin-panel';
-        
-        const sidebar = document.querySelector('.sidebar');
-        const mainContent = document.querySelector('.main-content');
-        const navLinks = document.querySelectorAll('.nav-link');
-        const sidebarToggle = document.querySelector('.sidebar-toggle');
-        const dashboardSection = document.getElementById('dashboard');
-        const jobsSection = document.getElementById('jobs');
-        const applicationsSection = document.getElementById('applications');
-        const settingsSection = document.getElementById('settings');
-
-        let jobsData = [];
-        let applicationsData = [];
-        let currentApplicationId = null;
-
-        function showSection(sectionId) {
-            [dashboardSection, jobsSection, applicationsSection, settingsSection].forEach(section => {
-                if (section) section.style.display = 'none';
-            });
-            
-            const targetSection = document.getElementById(sectionId);
-            if (targetSection) {
-                targetSection.style.display = 'block';
-            }
-            
-            navLinks.forEach(link => link.classList.remove('active'));
-            const activeLink = document.querySelector(`[data-section="${sectionId}"]`);
-            if (activeLink) {
-                activeLink.classList.add('active');
-            }
-            
-            const pageTitle = document.querySelector('.page-title');
-            switch(sectionId) {
-                case 'dashboard':
-                    pageTitle.textContent = 'Дашборд';
-                    loadDashboard();
-                    break;
-                case 'jobs':
-                    pageTitle.textContent = 'Вакансии';
-                    loadJobsTable();
-                    break;
-                case 'applications':
-                    pageTitle.textContent = 'Заявки';
-                    loadApplicationsTable();
-                    break;
-                case 'settings':
-                    pageTitle.textContent = 'Настройки';
-                    loadSettings();
-                    break;
-            }
-        }
-
-        async function loadDashboard() {
-            try {
-                const jobsResponse = await fetch(`${API_BASE_URL}/jobs`);
-                const applicationsResponse = await fetch(`${API_BASE_URL}/applications`);
-                
-                let jobsCount = 0;
-                let applicationsCount = 0;
-                
-                if (jobsResponse.ok) {
-                    const jobs = await jobsResponse.json();
-                    jobsCount = jobs.length;
-                }
-                
-                if (applicationsResponse.ok) {
-                    const applications = await applicationsResponse.json();
-                    applicationsCount = applications.length;
-                }
-                
-                const statsContainer = document.querySelector('.dashboard-stats');
-                if (statsContainer) {
-                    statsContainer.innerHTML = `
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-briefcase"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3>${jobsCount}</h3>
-                                <p>Активных вакансий</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3>${applicationsCount}</h3>
-                                <p>Заявок</p>
-                            </div>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки дашборда:', error);
-            }
-        }
-
-        async function loadApplicationsTable() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/applications`);
-                
-                if (response.ok) {
-                    const applications = await response.json();
-                    renderApplicationsTable(applications);
-                } else {
-                    console.error('Ошибка API:', response.status, response.statusText);
-                    showNotification(`Ошибка API: ${response.status}`, 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки заявок:', error);
-                showNotification('Ошибка загрузки заявок', 'error');
-            }
-        }
-
-        function renderApplicationsTable(applications) {
-            const tbody = document.querySelector('#applicationsTable tbody');
-            if (!tbody) {
-                console.error('Элемент #applicationsTable tbody не найден');
-                return;
-            }
-            
-            tbody.innerHTML = '';
-            
-            if (!applications || applications.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 3rem 1rem;">
-                            <div style="color: #64748b; font-size: 1.1rem;">
-                                <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1; opacity: 0.5;"></i>
-                                <p style="margin-bottom: 0.5rem; font-weight: 500;">Нет заявок для отображения</p>
-                                <p style="font-size: 0.9rem; opacity: 0.7;">Заявки появятся здесь после подачи кандидатами</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            applications.forEach((application, index) => {
-                const row = document.createElement('tr');
-                const createdDate = application.created_at ? new Date(application.created_at).toLocaleDateString('ru-RU') : 'Дата не указана';
-                const status = application.status || 'Новая';
-                
-                row.innerHTML = `
-                    <td>${application.fio || 'Не указано'}</td>
-                    <td>${application.email || 'Не указано'}</td>
-                    <td>${application.phone || 'Не указано'}</td>
-                    <td>${application.experience || 'Не указано'}</td>
-                    <td><span class="status-badge ${status.toLowerCase()}">${status}</span></td>
-                    <td><i class="fas fa-calendar-alt cell-icon"></i>${createdDate}</td>
-                `;
-                
-                tbody.appendChild(row);
-            });
-        }
-
-        async function loadSettings() {
-            try {
-                response = await fetch(`${API_BASE_URL}/settings`);
-                
-                if (response.ok) {
-                    const settings = await response.json();
-                    if (settings && settings.length > 0) {
-                        const setting = settings[0];
-                        document.getElementById('siteEmail').value = setting.site_email || '';
-                        document.getElementById('sitePhone').value = setting.site_phone || '';
-                        document.getElementById('siteAddress').value = setting.site_adress || '';
-                    }
-                } else {
-                    console.error('Ошибка загрузки настроек:', response.status);
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки настроек:', error);
-            }
-        }
-
-        async function saveSettings() {
-            const form = document.getElementById('settingsForm');
-            const formData = new FormData(form);
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/settings`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        site_email: formData.get('siteEmail'),
-                        site_phone: formData.get('sitePhone'),
-                        site_adress: formData.get('siteAddress')
-                    })
-                });
-
-                if (response.ok) {
-                    showNotification('Настройки успешно сохранены', 'success');
-                } else {
-                    const errorData = await response.json();
-                    showNotification(`Ошибка сохранения: ${errorData.detail}`, 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка сохранения настроек:', error);
-                showNotification('Ошибка сохранения настроек', 'error');
-            }
-        }
-
-        async function loadJobsTable() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/jobs`);
-                
-                if (response.ok) {
-                    jobsData = await response.json();
-                    renderJobsTable(jobsData);
-                } else {
-                    console.error('Ошибка API:', response.status, response.statusText);
-                    showNotification(`Ошибка API: ${response.status}`, 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки вакансий:', error);
-                showNotification('Ошибка загрузки вакансий', 'error');
-            }
-        }
-
-        function renderJobsTable(jobs) {
-            const tbody = document.querySelector('#jobsTable tbody');
-            if (!tbody) {
-                console.error('Элемент #jobsTable tbody не найден');
-                return;
-            }
-            
-            tbody.innerHTML = '';
-            
-            if (!jobs || jobs.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem 1rem;">
-                            <div style="color: #64748b; font-size: 1.1rem;">
-                                <i class="fas fa-briefcase" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1; opacity: 0.5;"></i>
-                                <p style="margin-bottom: 0.5rem; font-weight: 500;">Нет вакансий для отображения</p>
-                                <p style="font-size: 0.9rem; opacity: 0.7;">Добавьте первую вакансию, нажав кнопку выше</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            jobs.forEach((job, index) => {
-                const row = document.createElement('tr');
-                
-                const title = job.title || 'Название не указано';
-                const location = job.location || 'Локация не указана';
-                const salary = job.salary ? `${job.salary.toLocaleString()} BYN` : 'Зарплата не указана';
-                const requirements = job.requirements || job.Requirements || 'Требования не указаны';
-                const createdDate = job.created_at ? new Date(job.created_at).toLocaleDateString('ru-RU') : 'Дата не указана';
-                
-                const requirementsText = requirements.length > 80 ? 
-                    requirements.substring(0, 80) + '...' : requirements;
-                
-                const locationWithIcon = `<i class="fas fa-map-marker-alt cell-icon"></i>${location}`;
-                
-                const dateWithIcon = `<i class="fas fa-calendar-alt cell-icon"></i>${createdDate}`;
-                
-                const images = job.images || [];
-                const videos = job.videos || [];
-                let mediaDisplay = '';
-                
-                if (images.length > 0 || videos.length > 0) {
-                    mediaDisplay = `
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            ${images.length > 0 ? `
-                                <span style="display: flex; align-items: center; gap: 0.25rem; color: #059669; font-size: 0.8rem;">
-                                    <i class="fas fa-image"></i>
-                                    <span>${images.length}</span>
-                                </span>
-                            ` : ''}
-                            ${videos.length > 0 ? `
-                                <span style="display: flex; align-items: center; gap: 0.25rem; color: #3b82f6; font-size: 0.8rem;">
-                                    <i class="fas fa-video"></i>
-                                    <span>${videos.length}</span>
-                                </span>
-                            ` : ''}
-                        </div>
-                    `;
-                } else {
-                    mediaDisplay = '<span style="color: #9ca3af; font-size: 0.8rem;">Нет медиа</span>';
-                }
-                
-                row.innerHTML = `
-                    <td>
-                        <div style="display: flex; align-items: center;">
-                            <span class="status-indicator"></span>
-                            <strong style="color: #1e293b;">${title}</strong>
-                        </div>
-                    </td>
-                    <td>${locationWithIcon}</td>
-                    <td><span class="salary-amount">${salary}</span></td>
-                    <td>
-                        <div class="requirements-cell">
-                            <div class="requirements-text">${requirementsText}</div>
-                        </div>
-                    </td>
-                    <td>${dateWithIcon}</td>
-                    <td>${mediaDisplay}</td>
-                    <td>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-sm btn-info" onclick="editJob(${job.id})" title="Редактировать вакансию">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteJob(${job.id})" title="Удалить вакансию">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                
-                row.style.animationDelay = `${index * 0.1}s`;
-                tbody.appendChild(row);
-            });
-        }
-
-        async function editJob(jobId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
-                
-                if (response.ok) {
-                    const job = await response.json();
-                    
-                    document.getElementById('editJobId').value = job.id;
-                    document.getElementById('editJobTitle').value = job.title;
-                    document.getElementById('editJobDescription').value = job.description;
-                    document.getElementById('editJobLocation').value = job.location;
-                    document.getElementById('editJobSalary').value = job.salary;
-                    document.getElementById('editJobRequirements').value = job.Requirements || '';
-                    document.getElementById('editJobConditions').value = job.Conditions_and_benefits || '';
-                    
-                    document.getElementById('editJobModal').style.display = 'block';
-                } else {
-                    showNotification('Ошибка загрузки данных вакансии', 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка редактирования вакансии:', error);
-                showNotification('Ошибка редактирования вакансии', 'error');
-            }
-        }
-
-        async function submitEditJob() {
-            const jobId = document.getElementById('editJobId').value;
-            const jobData = {
-                title: document.getElementById('editJobTitle').value,
-                description: document.getElementById('editJobDescription').value,
-                location: document.getElementById('editJobLocation').value,
-                salary: parseFloat(document.getElementById('editJobSalary').value),
-                Requirements: document.getElementById('editJobRequirements').value,
-                Conditions_and_benefits: document.getElementById('editJobConditions').value
-            };
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(jobData)
-                });
-
-                if (response.ok) {
-                    showNotification('Вакансия успешно обновлена', 'success');
-                    closeModal('editJobModal');
-                    loadJobsTable();
-                } else {
-                    const errorData = await response.json();
-                    showNotification(`Ошибка обновления: ${errorData.detail}`, 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка обновления вакансии:', error);
-                showNotification('Ошибка обновления вакансии', 'error');
-            }
-        }
-
-        async function deleteJob(jobId) {
-            if (!confirm('Вы уверены, что хотите удалить эту вакансию?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    showNotification('Вакансия успешно удалена', 'success');
-                    loadJobsTable();
-                } else {
-                    const errorData = await response.json();
-                    showNotification(`Ошибка удаления: ${errorData.detail}`, 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка удаления вакансии:', error);
-                showNotification('Ошибка удаления вакансии', 'error');
-            }
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const sectionId = this.getAttribute('data-section');
-                    showSection(sectionId);
-                });
-            });
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
-                });
-            }
-
-            showSection('dashboard');
-        });
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 1rem 1.5rem;
-                border-radius: 8px;
-                color: white;
-                font-weight: 500;
-                z-index: 3000;
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-                max-width: 400px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                background: ${type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#2563eb'};
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.transform = 'translateX(0)';
-            }, 100);
-            
-            setTimeout(() => {
-                notification.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-
-        function showAddJobModal() {
-            document.getElementById('addJobModal').style.display = 'block';
-            setupFilePreviews();
-        }
-
-        function setupFilePreviews() {
-            const imageInput = document.getElementById('jobImages');
-            const videoInput = document.getElementById('jobVideos');
-            const previewContainer = document.getElementById('previewContainer');
-            const imagePreview = document.getElementById('imagePreview');
-            const videoPreview = document.getElementById('videoPreview');
-
-            imageInput.addEventListener('change', function(e) {
-                imagePreview.innerHTML = '';
-                const files = Array.from(e.target.files);
-                
-                if (files.length > 0) {
-                    previewContainer.style.display = 'block';
-                    
-                    files.forEach(file => {
-                        if (file.type.startsWith('image/')) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                const img = document.createElement('img');
-                                img.src = e.target.result;
-                                img.style.cssText = 'width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb;';
-                                imagePreview.appendChild(img);
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    });
-                }
-            });
-
-            videoInput.addEventListener('change', function(e) {
-                videoPreview.innerHTML = '';
-                const files = Array.from(e.target.files);
-                
-                if (files.length > 0) {
-                    previewContainer.style.display = 'block';
-                    
-                    files.forEach(file => {
-                        if (file.type.startsWith('video/')) {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                const videoContainer = document.createElement('div');
-                                videoContainer.style.cssText = 'width: 200px; margin-bottom: 1rem;';
-                                
-                                const video = document.createElement('video');
-                                video.src = e.target.result;
-                                video.controls = true;
-                                video.style.cssText = 'width: 100%; border-radius: 8px;';
-                                
-                                const fileName = document.createElement('p');
-                                fileName.textContent = file.name;
-                                fileName.style.cssText = 'font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem; text-align: center;';
-                                
-                                videoContainer.appendChild(video);
-                                videoContainer.appendChild(fileName);
-                                videoPreview.appendChild(videoContainer);
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    });
-                }
-            });
-        }
-
-        async function submitAddJob() {
-            const form = document.getElementById('addJobForm');
-            const formData = new FormData(form);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/new_job`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    showNotification('Вакансия успешно добавлена', 'success');
-                    closeModal('addJobModal');
-                    form.reset();
-                    document.getElementById('previewContainer').style.display = 'none';
-                    loadJobsTable();
-                } else {
-                    const errorData = await response.json();
-                    showNotification(`Ошибка добавления: ${errorData.detail}`, 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка добавления вакансии:', error);
-                showNotification('Ошибка добавления вакансии', 'error');
-            }
-        }
-    </script>
+    <script src="/admin/static/js/admin.js"></script>
 </body>
 </html> 

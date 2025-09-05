@@ -1,5 +1,4 @@
-// API endpoints
-const API_BASE_URL = 'http://localhost:8000/main';
+const API_BASE_URL = '/admin-panel';
 
 // DOM elements
 const sidebar = document.querySelector('.sidebar');
@@ -61,14 +60,27 @@ function showSection(sectionId) {
 // Dashboard functions
 async function loadDashboard() {
     try {
-        // Пока используем заглушку для статистики
-        const stats = {
-            total_jobs: jobsData.length || 0,
-            pending_applications: 0,
-            approved_applications: 0,
-            rejected_applications: 0
-        };
-        updateStats(stats);
+        const [jobsRes, appsRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/jobs`, { method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' } }),
+            fetch(`${API_BASE_URL}/applications`, { method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' } })
+        ]);
+
+        let totalJobs = 0;
+        let appsLastWeek = 0;
+
+        if (jobsRes.ok) {
+            const jobs = await jobsRes.json();
+            totalJobs = jobs.length;
+        }
+
+        if (appsRes.ok) {
+            const apps = await appsRes.json();
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            appsLastWeek = apps.filter(a => a.created_at && new Date(a.created_at) >= weekAgo).length;
+        }
+
+        updateStats({ total_jobs: totalJobs, apps_last_week: appsLastWeek });
     } catch (error) {
         console.error('Ошибка загрузки дашборда:', error);
         showNotification('Ошибка загрузки данных', 'error');
@@ -76,16 +88,17 @@ async function loadDashboard() {
 }
 
 function updateStats(stats) {
-    document.getElementById('totalJobs').textContent = stats.total_jobs || 0;
-    document.getElementById('pendingApplications').textContent = stats.pending_applications || 0;
-    document.getElementById('approvedApplications').textContent = stats.approved_applications || 0;
-    document.getElementById('rejectedApplications').textContent = stats.rejected_applications || 0;
+    const jobsEl = document.getElementById('totalJobs');
+    if (jobsEl) jobsEl.textContent = stats.total_jobs || 0;
+
+    const weekEl = document.getElementById('pendingApplications');
+    if (weekEl) weekEl.textContent = stats.apps_last_week || 0;
 }
 
 // Jobs functions
 async function loadJobsTable() {
     try {
-        const response = await fetch(`${API_BASE_URL}/jobs`);
+        const response = await fetch(`${API_BASE_URL}/jobs`, { method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' } });
         
         if (response.ok) {
             jobsData = await response.json();
@@ -112,7 +125,7 @@ function renderJobsTable(jobs) {
     if (!jobs || jobs.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 3rem 1rem;">
+                <td colspan="5" style="text-align: center; padding: 3rem 1rem;"> <!-- Изменили colspan с 6 на 5 -->
                     <div style="color: #64748b; font-size: 1.1rem;">
                         <i class="fas fa-briefcase" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1; opacity: 0.5;"></i>
                         <p style="margin-bottom: 0.5rem; font-weight: 500;">Нет вакансий для отображения</p>
@@ -127,23 +140,19 @@ function renderJobsTable(jobs) {
     jobs.forEach((job, index) => {
         const row = document.createElement('tr');
         
-        // Проверяем и форматируем данные
         const title = job.title || 'Название не указано';
         const location = job.location || 'Локация не указана';
         const salary = job.salary ? `${job.salary.toLocaleString()} BYN` : 'Зарплата не указана';
         const requirements = job.Requirements || job.requirements || 'Требования не указаны';
         const createdDate = job.created_at ? new Date(job.created_at).toLocaleDateString('ru-RU') : 'Дата не указана';
         
-        // Обрезаем требования если они слишком длинные
         const requirementsText = requirements.length > 80 ? 
             requirements.substring(0, 80) + '...' : requirements;
         
-        // Добавляем иконку для локации
         const locationWithIcon = `<i class="fas fa-map-marker-alt cell-icon"></i>${location}`;
         
-        // Добавляем иконку для даты
         const dateWithIcon = `<i class="fas fa-calendar-alt cell-icon"></i>${createdDate}`;
-        
+
         row.innerHTML = `
             <td>
                 <div style="display: flex; align-items: center;">
@@ -170,65 +179,25 @@ function renderJobsTable(jobs) {
                 </div>
             </td>
         `;
-        
-        // Добавляем задержку анимации
         row.style.animationDelay = `${index * 0.1}s`;
         tbody.appendChild(row);
     });
 }
-
 // Applications functions
 async function loadApplicationsTable() {
     try {
-        // Пока используем заглушку, так как API для заявок еще не реализован
-        applicationsData = [];
-        renderApplicationsTable(applicationsData);
-        loadJobFilterOptions();
+        const response = await fetch(`${API_BASE_URL}/applications`, { method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' } });
+        if (response.ok) {
+            applicationsData = await response.json();
+            renderApplicationsTable(applicationsData);
+        } else {
+            console.error('Ошибка API при загрузке заявок:', response.status, response.statusText);
+            showNotification(`Ошибка API при загрузке заявок: ${response.status}`, 'error');
+        }
     } catch (error) {
         console.error('Ошибка загрузки заявок:', error);
         showNotification('Ошибка загрузки заявок', 'error');
     }
-}
-
-function renderApplicationsTable(applications) {
-    const tbody = document.querySelector('#applicationsTable tbody');
-    if (!tbody) {
-        console.error('Элемент #applicationsTable tbody не найден');
-        return;
-    }
-    
-    tbody.innerHTML = '';
-    
-    applications.forEach(app => {
-        const row = document.createElement('tr');
-        const statusClass = getStatusClass(app.status);
-        const statusText = getStatusText(app.status);
-        
-        row.innerHTML = `
-            <td>${app.id}</td>
-            <td>${app.job_title}</td>
-            <td>${app.fio}</td>
-            <td>${app.email}</td>
-            <td>${app.phone}</td>
-            <td>${app.experience ? (app.experience.length > 50 ? app.experience.substring(0, 50) + '...' : app.experience) : '-'}</td>
-            <td>${new Date(app.created_at).toLocaleDateString()}</td>
-            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-            <td>
-                <button class="btn btn-sm btn-info" onclick="viewApplication(${app.id})">
-                    <i class="fas fa-eye"></i>
-                </button>
-                ${app.status === 'pending' ? `
-                    <button class="btn btn-sm btn-success" onclick="approveApplication(${app.id})">
-                        <i class="fas fa-check"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="rejectApplication(${app.id})">
-                        <i class="fas fa-times"></i>
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
 }
 
 function getStatusClass(status) {
@@ -249,55 +218,63 @@ function getStatusText(status) {
     }
 }
 
-function loadJobFilterOptions() {
-    const jobFilter = document.getElementById('jobFilter');
-    jobFilter.innerHTML = '<option value="">Все вакансии</option>';
+function renderApplicationsTable(applications) {
+    const tbody = document.querySelector('#applicationsTable tbody');
+    if (!tbody) {
+        console.error('Элемент #applicationsTable tbody не найден');
+        return;
+    }
     
-    jobsData.forEach(job => {
-        const option = document.createElement('option');
-        option.value = job.id;
-        option.textContent = job.title;
-        jobFilter.appendChild(option);
+    tbody.innerHTML = '';
+    
+    if (!applications || applications.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 3rem 1rem;">
+                    <div style="color: #64748b; font-size: 1.1rem;">
+                        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #cbd5e1; opacity: 0.5;"></i>
+                        <p style="margin-bottom: 0.5rem; font-weight: 500;">Нет заявок для отображения</p>
+                        <p style="font-size: 0.9rem; opacity: 0.7;">Заявки появятся здесь после подачи кандидатами</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    applications.forEach(app => {
+        const row = document.createElement('tr');
+        const statusClass = getStatusClass(app.status);
+        const statusText = getStatusText(app.status);
+        
+        const experienceText = app.experience ? (app.experience.length > 200 ? app.experience.substring(0, 200) + '…' : app.experience) : '-';
+        const createdDate = app.created_at ? new Date(app.created_at).toLocaleDateString('ru-RU') : 'Дата не указана';
+        
+        row.innerHTML = `
+            <td>${app.fio || 'Не указано'}</td>
+            <td>${app.email || 'Не указано'}</td>
+            <td><a href="tel:${app.phone || ''}" style="color:#007bff;text-decoration:none;">${app.phone || 'Не указано'}</a></td>
+            <td><div class="experience-cell" title="${(app.experience || '').replace(/"/g, '&quot;')}">${experienceText}</div></td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td><i class="fas fa-calendar-alt cell-icon"></i>${createdDate}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="viewApplication(${app.id})" title="Открыть карточку">
+                    <i class="fas fa-eye"></i>
+                </button>
+                ${app.status === 'pending' ? `
+                    <button class="btn btn-sm btn-success" onclick="approveApplication(${app.id})" title="Одобрить">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="rejectApplication(${app.id})" title="Отклонить">
+                        <i class="fas fa-times"></i>
+                    </button>
+                ` : ''}
+            </td>
+        `;
+        tbody.appendChild(row);
     });
 }
 
-async function applyFilters() {
-    const status = document.getElementById('statusFilter').value;
-    const jobId = document.getElementById('jobFilter').value;
-    const dateFrom = document.getElementById('dateFromFilter').value;
-    const dateTo = document.getElementById('dateToFilter').value;
-    
-    try {
-        let url = `${API_BASE_URL}/admin-panel/applications?`;
-        const params = new URLSearchParams();
-        
-        if (status) params.append('status', status);
-        if (jobId) params.append('job_id', jobId);
-        if (dateFrom) params.append('date_from', dateFrom);
-        if (dateTo) params.append('date_to', dateTo);
-        
-        url += params.toString();
-        
-        const response = await fetch(url);
-        if (response.ok) {
-            applicationsData = await response.json();
-            renderApplicationsTable(applicationsData);
-        }
-    } catch (error) {
-        console.error('Ошибка применения фильтров:', error);
-        showNotification('Ошибка применения фильтров', 'error');
-    }
-}
-
-function clearFilters() {
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('jobFilter').value = '';
-    document.getElementById('dateFromFilter').value = '';
-    document.getElementById('dateToFilter').value = '';
-    loadApplicationsTable();
-}
-
-// Обновляем функции для работы с новым API
 async function approveApplication(applicationId = null) {
     const id = applicationId || currentApplicationId;
     if (!id) return;
@@ -306,7 +283,7 @@ async function approveApplication(applicationId = null) {
         const formData = new FormData();
         formData.append('status', 'approved');
         
-        const response = await fetch(`${API_BASE_URL}/admin-panel/applications/${id}/status`, {
+        const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
             method: 'PUT',
             body: formData
         });
@@ -334,7 +311,7 @@ async function rejectApplication(applicationId = null) {
         const formData = new FormData();
         formData.append('status', 'rejected');
         
-        const response = await fetch(`${API_BASE_URL}/admin-panel/applications/${id}/status`, {
+        const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
             method: 'PUT',
             body: formData
         });
@@ -354,45 +331,192 @@ async function rejectApplication(applicationId = null) {
     }
 }
 
-// Settings functions
-async function loadSettings() {
+async function filterApplications() {
     try {
-        const response = await fetch(`${API_BASE_URL}/settings`);
-        if (response.ok) {
-            const settings = await response.json();
-            document.getElementById('contactEmail').value = settings.site_email || '';
-            document.getElementById('contactPhone').value = settings.site_phone || '';
-            document.getElementById('contactAddress').value = settings.site_adress || '';
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки настроек:', error);
-        showNotification('Ошибка загрузки настроек', 'error');
-    }
-}
-
-async function saveSettings() {
-    try {
-        const formData = new FormData();
-        formData.append('site_email', document.getElementById('contactEmail').value);
-        formData.append('site_phone', document.getElementById('contactPhone').value);
-        formData.append('site_adress', document.getElementById('contactAddress').value);
+        const statusFilter = document.getElementById('statusFilter');
+        const selectedStatus = statusFilter.value;
         
-        const response = await fetch(`${API_BASE_URL}/settings`, {
-            method: 'PUT',
-            body: formData
+        if (!selectedStatus) {
+            await loadApplicationsTable();
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/applications/filter/${selectedStatus}`, {
+            method: 'GET'
         });
         
         if (response.ok) {
-            showNotification('Настройки успешно сохранены!', 'success');
+            showNotification('Фильтр применен', 'success');
+            
+            const filteredApplications = await response.json();
+            
+            updateApplicationsTable(filteredApplications);
+            
+            await loadDashboard();
         } else {
             const error = await response.json();
             showNotification(`Ошибка: ${error.detail}`, 'error');
         }
     } catch (error) {
-        console.error('Ошибка сохранения настроек:', error);
-        showNotification('Ошибка сохранения настроек', 'error');
+        console.error('Ошибка фильтрации заявок:', error);
+        showNotification('Ошибка фильтрации заявок', 'error');
     }
 }
+
+function updateApplicationsTable(applications) {
+    const tableBody = document.querySelector('#applicationsTable tbody');
+    tableBody.innerHTML = '';
+    
+    applications.forEach(app => {
+            const statusClass = getStatusClass(app.status);
+            const statusText = getStatusText(app.status);
+            const experience = app.experience || '';
+            const experienceText = experience.length > 200 ? 
+                experience.substring(0, 200) + '…' : experience;
+            
+            const createdDate = app.created_at ? 
+                new Date(app.created_at).toLocaleDateString('ru-RU') : 
+                'Дата не указана';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${app.fio || 'Не указано'}</td>
+                <td>${app.email || 'Не указано'}</td>
+                <td><a href="tel:${app.phone || ''}" style="color:#007bff;text-decoration:none;">${app.phone || 'Не указано'}</a></td>
+                <td><div class="experience-cell" title="${experience.replace(/"/g, '&quot;')}">${experienceText || '-'}</div></td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td><i class="fas fa-calendar-alt cell-icon"></i>${createdDate}</td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="viewApplication(${app.id})" title="Открыть карточку">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${app.status === 'pending' ? `
+                        <button class="btn btn-sm btn-success" onclick="approveApplication(${app.id})" title="Одобрить">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectApplication(${app.id})" title="Отклонить">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            `;
+            tableBody.appendChild(row);
+        
+    });
+}
+
+// settings
+async function updateSettings() {
+    try {
+        const formData = new FormData();
+        formData.append('site_adress', document.getElementById('siteAddress').value);
+        formData.append('site_email', document.getElementById('siteEmail').value);
+        formData.append('site_phone', document.getElementById('sitePhone').value);
+
+        const response = await fetch(`${API_BASE_URL}/settings`, {
+            method: 'PUT',
+            credentials: 'include',
+            body: formData
+        });
+        
+         if (response.ok) {
+            const updatedSettings = await response.json();
+            showNotification('Настройки успешно обновлены!', 'success');
+            
+            if (document.getElementById('currentAddress')) {
+                document.getElementById('currentAddress').textContent = updatedSettings.site_adress;
+            }
+            if (document.getElementById('currentEmail')) {
+                document.getElementById('currentEmail').textContent = updatedSettings.site_email;
+            }
+            if (document.getElementById('currentPhone')) {
+                document.getElementById('currentPhone').textContent = updatedSettings.site_phone;
+            }
+            
+            closeModal('settingsModal');
+            return updatedSettings;
+        } else {
+            const errorData = await response.json().catch(() => ({ detail: 'Неизвестная ошибка' }));
+            showNotification(`Ошибка: ${errorData.detail || 'Неизвестная ошибка'}`, 'error');
+            console.error('Ошибка сервера:', response.status, errorData);
+        }
+    } catch (error) {
+        console.error('Ошибка обновления настроек:', error);
+        showNotification('Ошибка сети при обновлении настроек', 'error');
+    }
+}
+
+async function loadSettings() {
+    try {
+        const response = await fetch('/admin-panel/settings');
+        if (response.ok) {
+            const settings = await response.json();
+
+            document.getElementById('siteEmail').value = settings.site_email || '';
+            document.getElementById('sitePhone').value = settings.site_phone || '';
+            document.getElementById('siteAddress').value = settings.site_adress || '';
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки настроек:', error);
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit',updateSettings);
+    }
+});
+
+
+function showNotification(message, type = 'info') {
+    let displayMessage;
+    
+    if (typeof message === 'string') {
+        displayMessage = message;
+    } else if (typeof message === 'object') {
+        try {
+            displayMessage = JSON.stringify(message);
+        } catch (e) {
+            displayMessage = 'Произошла ошибка';
+        }
+    } else {
+        displayMessage = String(message);
+    }
+    
+    document.querySelectorAll('.notification').forEach(n => n.remove());
+    
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = displayMessage;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+        color: white;
+        border-radius: 8px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        max-width: 400px;
+        word-wrap: break-word;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 5000);
+}
+
 
 // Modal functions
 function showAddJobModal() {
@@ -417,7 +541,7 @@ async function submitAddJob() {
         formData.append('Requirements', document.getElementById('jobRequirements').value);
         formData.append('Conditions_and_benefits', document.getElementById('jobConditions').value);
         
-        const response = await fetch(`${API_BASE_URL}/jobs`, {
+        const response = await fetch(`${API_BASE_URL}/new_job`, {
             method: 'POST',
             body: formData
         });
@@ -437,7 +561,7 @@ async function submitAddJob() {
     }
 }
 
-// Функция для открытия модального окна редактирования
+
 function editJob(id) {
     const job = jobsData.find(j => j.id === id);
     if (!job) {
@@ -445,7 +569,7 @@ function editJob(id) {
         return;
     }
     
-    // Заполняем форму данными вакансии
+
     document.getElementById('editJobId').value = job.id;
     document.getElementById('editJobTitle').value = job.title;
     document.getElementById('editJobDescription').value = job.description;
@@ -454,11 +578,11 @@ function editJob(id) {
     document.getElementById('editJobRequirements').value = job.Requirements || job.requirements || '';
     document.getElementById('editJobConditions').value = job.Conditions_and_benefits || job.conditions_and_benefits || '';
     
-    // Показываем модальное окно
+    
     document.getElementById('editJobModal').style.display = 'block';
 }
 
-// Функция для сохранения изменений в вакансии
+
 async function submitEditJob() {
     try {
         const jobId = document.getElementById('editJobId').value;
@@ -490,18 +614,6 @@ async function submitEditJob() {
     }
 }
 
-// Utility functions
-function getStatusText(status) {
-    const statusMap = {
-        'pending': 'На рассмотрении',
-        'approved': 'Одобрена',
-        'rejected': 'Отклонена',
-        'active': 'Активна',
-        'inactive': 'Неактивна'
-    };
-    return statusMap[status] || status;
-}
-
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -516,7 +628,7 @@ function closeModal(modalId) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
         
-        // Reset forms
+        
         if (modalId === 'addJobModal') {
             document.getElementById('addJobForm').reset();
         } else if (modalId === 'editJobModal') {
@@ -526,29 +638,8 @@ function closeModal(modalId) {
     }
 }
 
-// Функция для показа уведомлений
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    // Автоматически удаляем уведомление через 5 секунд
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }
-    }, 5000);
-}
-
-// Заглушки для недостающих функций
 async function deleteJob(id) {
+    
     if (!confirm('Вы уверены, что хотите удалить эту вакансию?')) {
         return;
     }
@@ -563,21 +654,40 @@ async function deleteJob(id) {
             loadJobsTable();
             loadDashboard();
         } else {
-            const error = await response.json();
-            showNotification(`Ошибка удаления: ${error.detail}`, 'error');
+            const errorData = await response.json();
+            showNotification(
+                `Ошибка удаления: ${errorData.detail || 'Неизвестная ошибка'}`,
+                'error'
+            );
         }
     } catch (error) {
         console.error('Ошибка удаления вакансии:', error);
-        showNotification('Ошибка удаления вакансии', 'error');
+        showNotification('Ошибка подключения к серверу', 'error');
     }
 }
 
 function viewApplication(id) {
-    const application = applicationsData.find(app => app.id === id);
-    if (application) {
-        currentApplicationId = id;
-        showApplicationModal(application);
-    }
+  const app = applicationsData.find(a => a.id === id);
+  if (!app) return;
+
+  currentApplicationId = id;
+
+
+  const setText = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val || '-'; };
+  setText('#appViewName', app.fio);
+  setText('#appViewEmail', app.email);
+  setText('#appViewPhone', app.phone);
+  setText('#appViewJob', app.job_title); 
+  setText('#appViewDate', app.created_at ? new Date(app.created_at).toLocaleString('ru-RU') : '-');
+  setText('#appViewExperience', app.experience);
+
+  const approveBtn = document.getElementById('approveApplicationBtn');
+  const rejectBtn  = document.getElementById('rejectApplicationBtn');
+  if (approveBtn) approveBtn.onclick = () => approveApplication(id);
+  if (rejectBtn)  rejectBtn.onclick  = () => rejectApplication(id);
+
+  const modal = document.getElementById('applicationViewModal');
+  if (modal) modal.style.display = 'block';
 }
 
 function showApplicationModal(application) {
@@ -627,30 +737,27 @@ function closeApplicationModal() {
     currentApplicationId = null;
 }
 
-// Event listeners
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Sidebar toggle
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', () => {
             sidebar.classList.toggle('active');
         });
     }
     
-    // Navigation
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const section = link.getAttribute('data-section');
             showSection(section);
             
-            // На мобильных устройствах закрываем сайдбар после выбора раздела
+
             if (window.innerWidth <= 1024) {
                 sidebar.classList.remove('active');
             }
         });
     });
     
-    // Job form submission
     const jobForm = document.getElementById('jobForm');
     if (jobForm) {
         jobForm.addEventListener('submit', (e) => {
@@ -678,16 +785,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Settings form submission
     const settingsForm = document.getElementById('settingsForm');
     if (settingsForm) {
         settingsForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            saveSettings();
+            updateSettings();
         });
     }
     
-    // Modal close buttons
     document.querySelectorAll('.close').forEach(closeBtn => {
         closeBtn.addEventListener('click', () => {
             const modal = closeBtn.closest('.modal');
@@ -697,13 +802,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Close modals when clicking outside
     window.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) {
             closeModal(e.target.id);
         }
-        
-        // Закрываем сайдбар при клике вне его на мобильных устройствах
         if (window.innerWidth <= 1024 && 
             !sidebar.contains(e.target) && 
             !sidebarToggle.contains(e.target) && 
@@ -712,10 +814,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Initialize dashboard
     showSection('dashboard');
     
-    // Handle window resize for responsive sidebar
     window.addEventListener('resize', () => {
         if (window.innerWidth > 1024) {
             sidebar.classList.remove('active');

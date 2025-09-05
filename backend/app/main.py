@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 import uvicorn 
 from api.user_route import user_rout
 from api.admin_route import admin_rout
-from core.dependencies import require_admin
+from utils.outh_admin import require_admin
 
 
 app = FastAPI()

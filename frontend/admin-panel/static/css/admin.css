@@ -1,4 +1,3 @@
-/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -17,7 +16,6 @@ body {
     min-height: 100vh;
 }
 
-/* Sidebar */
 .sidebar {
     width: 280px;
     background: #1f2937;
@@ -445,31 +443,51 @@ body {
     background: #f9fafb;
 }
 
-/* Filters */
-.filters {
+.filters-container {
     display: flex;
-    gap: 1rem;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem; 
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); 
+    align-items: flex-end; 
 }
 
-.filter-select {
+.filter-group {
+    display: flex;
+    flex-direction: column; 
+    gap: 0.5rem; 
+}
+
+.filter-group label {
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.filter-select,
+.filter-input { 
     padding: 0.75rem 1rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #d1d5db;
     border-radius: 8px;
     background: white;
     font-size: 0.9rem;
     color: #374151;
     transition: all 0.3s ease;
-    min-width: 150px;
+    min-width: 180px; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); 
 }
 
-.filter-select:focus {
+.filter-select:focus,
+.filter-input:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #3b82f6; 
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 1px 3px rgba(0, 0, 0, 0.05); 
 }
 
-/* Buttons */
+
 .btn {
     padding: 0.75rem 1.5rem;
     border: none;
@@ -494,38 +512,31 @@ body {
 }
 
 .btn-secondary {
-    background: #6b7280;
+    background: linear-gradient(135deg, #4c525f 0%, #343a40 100%); 
     color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
 }
 
 .btn-secondary:hover {
-    background: #4b5563;
+    background: linear-gradient(135deg, #343a40 0%, #212529 100%); 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.btn-success {
-    background: #059669;
-    color: white;
+.btn-outline {
+    background: white; 
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
 }
 
-.btn-success:hover {
-    background: #047857;
+.btn-outline:hover {
+    background: #f8fafc;
+    border-color: #9ca3af;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn-danger {
-    background: #dc2626;
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #b91c1c;
-}
-
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-}
-
-/* Status Badges */
 .status-badge {
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
@@ -555,7 +566,6 @@ body {
     color: #1e40af;
 }
 
-/* Notification Styles */
 .notification {
     position: fixed;
     top: 20px;
@@ -594,7 +604,6 @@ body {
     background: #3b82f6;
 }
 
-/* Action Buttons */
 .action-buttons {
     display: flex;
     gap: 0.5rem;
@@ -607,7 +616,6 @@ body {
     justify-content: center;
 }
 
-/* Job Info and Applicant Info */
 .job-info,
 .applicant-info {
     display: flex;
@@ -627,7 +635,6 @@ body {
     color: #6b7280;
 }
 
-/* Settings */
 .settings-content {
     display: grid;
     gap: 2rem;
@@ -686,7 +693,6 @@ body {
     border-color: #2563eb;
 }
 
-/* Checkbox Styles */
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -725,7 +731,6 @@ body {
     font-weight: bold;
 }
 
-/* Modal Styles */
 .modal {
     display: none;
     position: fixed;
@@ -808,7 +813,6 @@ body {
     gap: 1rem;
 }
 
-/* Form Styles */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -844,7 +848,6 @@ body {
     min-height: 100px;
 }
 
-/* Button Styles */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -891,9 +894,6 @@ body {
     border-color: #9ca3af;
 }
 
-/* Application Details - Legacy styles removed */
-
-/* --- Стили для формы создания профессии --- */
 .job-form {
   max-width: 500px;
   margin: 40px auto;
@@ -937,7 +937,6 @@ body {
   background: #1a5fd6;
 }
 
-/* --- Медиа --- */
 .media-upload {
   display: flex;
   flex-direction: column;
@@ -1020,7 +1019,6 @@ body {
   }
 }
 
-/* --- Галерея медиа в карточке профессии --- */
 .profession-card {
   max-width: 600px;
   margin: 40px auto 0 auto;
@@ -1057,7 +1055,6 @@ body {
   }
 }
 
-/* Application Details Modal */
 .application-details {
     padding: 1rem 0;
 }
@@ -1095,7 +1092,6 @@ body {
     line-height: 1.5;
 }
 
-/* Experience field styling */
 #appViewExperience {
     white-space: pre-wrap;
     line-height: 1.6;
@@ -1110,7 +1106,6 @@ body {
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Special styling for application view modal */
 #applicationViewModal .modal-content {
     max-width: 700px;
 }
@@ -1140,7 +1135,6 @@ body {
     box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
 }
 
-/* Enhanced table hover effects */
 .applications-table tr {
     transition: background-color 0.2s ease;
     cursor: pointer;
@@ -1157,7 +1151,6 @@ body {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Section Header */
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -1173,7 +1166,6 @@ body {
     margin: 0;
 }
 
-/* Table Container */
 .table-container {
     background: white;
     border-radius: 12px;
@@ -1181,7 +1173,6 @@ body {
     overflow: hidden;
 }
 
-/* Content Section */
 .content-section {
     display: none;
     padding: 2rem;
@@ -1191,7 +1182,6 @@ body {
     display: block;
 }
 
-/* Responsive Design */
 @media (max-width: 1024px) {
     .dashboard-content {
         grid-template-columns: 1fr;
@@ -1621,7 +1611,6 @@ body {
     }
 } 
 
-/* Стили для упрощенной таблицы вакансий */
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -1655,7 +1644,6 @@ body {
     border-bottom: none;
 }
 
-/* Action Buttons */
 .btn-sm {
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
@@ -2110,6 +2098,30 @@ body {
         flex-direction: column;
         gap: 1rem;
         text-align: center;
+    }
+}
+
+/* Responsive styles for filters */
+@media (max-width: 768px) {
+    .filters-container {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .filter-select,
+    .filter-input {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .filters-container .btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
