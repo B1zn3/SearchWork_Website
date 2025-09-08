@@ -1,21 +1,13 @@
-from pydantic import BaseModel, EmailStr, field_validator, ValidationError
+from pydantic import BaseModel, field_validator, EmailStr
 import re
 
-
-
-class JobSchema(BaseModel):
-    title: str
-    description: str
-    location: str
-    salary: float
-    Requirements: str
-    Conditions_and_benefits: str
 
 class ApplicationSchema(BaseModel):
     fio: str
     email: EmailStr
     phone: str
     experience: str
+    job_id: int
 
     @field_validator('fio')
     @classmethod
@@ -56,17 +48,6 @@ class ApplicationSchema(BaseModel):
             raise ValueError('Описание опыта работы не должно превышать 2000 символов')
         
         return v
-
-class SettingSchema(BaseModel):
-    site_email: EmailStr
-    site_phone: str
-    site_adress: str
-     
-    @field_validator('site_phone')
-    @classmethod
-    def validate_phone(cls, v):
-        if not v or not v.strip():
-            raise ValueError('Номер телефона не может быть пустым')
-        if not re.match(r'^[\+]?[0-9\s\-\(\)]{10,20}$', v.strip()):
-            raise ValueError('Некорректный номер телефона')
-        return v.strip()
+    
+class GetStatusApplicationSchema(ApplicationSchema):
+    status: str
