@@ -1,4 +1,3 @@
-/* Reset and base styles */
 * {
     margin: 0;
     padding: 0;
@@ -105,10 +104,6 @@ body {
     margin-bottom: 2rem;
 }
 
-.hero-image {
-    margin-top: 3rem;
-}
-
 .hero-card {
     display: inline-block;
     background: rgba(255, 255, 255, 0.1);
@@ -206,47 +201,6 @@ body {
     font-weight: 500;
 }
 
-/* Job Card Image */
-.job-card-image {
-    position: relative;
-    margin-bottom: 1.5rem;
-    border-radius: 12px;
-    overflow: hidden;
-    height: 200px;
-}
-
-.job-preview-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.job-card:hover .job-preview-image {
-    transform: scale(1.05);
-}
-
-.video-indicator {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 60px;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-}
-
-.video-indicator i {
-    color: white;
-    font-size: 1.5rem;
-    margin-left: 4px;
-}
-
 /* Job Details */
 .job-details {
     display: grid;
@@ -283,62 +237,6 @@ body {
     font-size: 0.95rem;
 }
 
-/* Job Preview Info */
-.job-preview-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-}
-
-.job-requirements-preview,
-.job-benefits-preview {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background: #f8fafc;
-    border-radius: 8px;
-    font-size: 0.9rem;
-}
-
-.job-requirements-preview i,
-.job-benefits-preview i {
-    color: #2563eb;
-    font-size: 1rem;
-    margin-top: 0.1rem;
-    flex-shrink: 0;
-}
-
-.job-requirements-preview span,
-.job-benefits-preview span {
-    color: #4b5563;
-    line-height: 1.5;
-}
-
-/* Job Media Preview */
-.job-media-preview {
-    display: flex;
-    justify-content: center;
-    padding: 0.75rem;
-    background: #f0f9ff;
-    border-radius: 8px;
-    border: 1px solid #e0f2fe;
-}
-
-.media-count {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #0369a1;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.media-count i {
-    font-size: 1rem;
-}
-
 /* Job Requirements */
 .job-requirements {
     margin-top: 1rem;
@@ -357,18 +255,6 @@ body {
     color: #6b7280;
     font-size: 0.9rem;
     line-height: 1.5;
-}
-
-/* Убираем старые стили для preview-info */
-.job-preview-info,
-.job-requirements-preview,
-.job-benefits-preview {
-    display: none;
-}
-
-/* Убираем стили для описания, так как оно больше не показывается */
-.job-description {
-    display: none;
 }
 
 /* About Section */
@@ -629,64 +515,6 @@ body {
     gap: 2rem;
 }
 
-.job-media {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.job-images {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.main-image {
-    width: 100%;
-    height: 300px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #f3f4f6;
-}
-
-.main-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.image-gallery {
-    display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
-}
-
-.image-gallery img {
-    width: 80px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: opacity 0.3s ease;
-}
-
-.image-gallery img:hover {
-    opacity: 0.8;
-}
-
-.job-video {
-    width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #f3f4f6;
-}
-
-.job-video video {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-}
-
 .job-info {
     display: flex;
     flex-direction: column;
@@ -934,13 +762,6 @@ body {
     font-size: 1rem;
 }
 
-/* Скрываем неиспользуемые элементы */
-.job-media,
-.job-description,
-.job-benefits {
-    display: none;
-} 
-
 /* Job Detail Modal Styles */
 .job-detail-modal {
     max-width: 1200px;
@@ -1058,37 +879,6 @@ body {
     margin-bottom: 1rem;
     font-size: 1.25rem;
     font-weight: 600;
-}
-
-.job-main-image {
-    margin-bottom: 1.5rem;
-    text-align: center;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #f8fafc;
-    padding: 0.5rem;
-}
-
-.job-main-image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-height: 350px;
-    min-height: 200px;
-    object-fit: cover;
-    width: 100%;
-}
-
-.job-image-gallery {
-    display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 0.5rem;
-    background: #f8fafc;
-    border-radius: 8px;
 }
 
 .gallery-thumbnail {
@@ -1266,21 +1056,4 @@ body {
         font-size: 1rem;
         padding-bottom: 0.3rem;
     }
-    
-    .job-description-section h3::after,
-    .job-media-section h3::after,
-    .job-requirements h3::after,
-    .job-benefits h3::after {
-        width: 30px;
-    }
-    
-    .gallery-thumbnail {
-        width: 50px;
-        height: 50px;
-    }
-    
-    .job-main-image img {
-        min-height: 150px;
-        max-height: 250px;
-    }
-} 
+}

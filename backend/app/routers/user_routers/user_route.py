@@ -30,7 +30,7 @@ async def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
 @user_rout.post('/apply/{job_id}', tags=['user'], summary='submit application')
 async def submit_application(
     job_id: int,
-    application_data: ApplicationSchema = Depends(),
+    application_data: ApplicationSchema,
     db: Session = Depends(get_db)
 ):
     try:

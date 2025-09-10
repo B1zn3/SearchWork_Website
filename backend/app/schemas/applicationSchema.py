@@ -1,12 +1,13 @@
 from pydantic import BaseModel, field_validator, EmailStr
 import re
+from typing import Optional
 
 
 class ApplicationSchema(BaseModel):
     fio: str
     email: EmailStr
     phone: str
-    experience: str
+    experience: Optional[str] = None
     job_id: int
 
     @field_validator('fio')
