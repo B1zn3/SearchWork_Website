@@ -1,61 +1,111 @@
 const API_BASE_URL = '/admin-panel';
 
-// DOM elements
-const sidebar = document.querySelector('.sidebar');
-const mainContent = document.querySelector('.main-content');
-const navLinks = document.querySelectorAll('.nav-link');
-const sidebarToggle = document.querySelector('.sidebar-toggle');
-const dashboardSection = document.getElementById('dashboard');
-const jobsSection = document.getElementById('jobs');
-const applicationsSection = document.getElementById('applications');
-const settingsSection = document.getElementById('settings');
+let sidebar, mainContent, navLinks, sidebarToggle;
+let dashboardSection, jobsSection, applicationsSection, settingsSection;
 
-// Global data
 let jobsData = [];
 let applicationsData = [];
 let currentApplicationId = null;
 
+function initDOMElements() {
+    sidebar = document.querySelector('.sidebar');
+    mainContent = document.querySelector('.main-content');
+    navLinks = document.querySelectorAll('.nav-link');
+    sidebarToggle = document.querySelector('.sidebar-toggle');
+    dashboardSection = document.getElementById('dashboard');
+    jobsSection = document.getElementById('jobs');
+    applicationsSection = document.getElementById('applications');
+    settingsSection = document.getElementById('settings');
+}
+
+
 // Navigation
 function showSection(sectionId) {
-    // Hide all sections
     [dashboardSection, jobsSection, applicationsSection, settingsSection].forEach(section => {
         if (section) section.style.display = 'none';
     });
     
-    // Show target section
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.style.display = 'block';
     }
-    
-    // Update active nav link
-    navLinks.forEach(link => link.classList.remove('active'));
-    const activeLink = document.querySelector(`[data-section="${sectionId}"]`);
-    if (activeLink) {
-        activeLink.classList.add('active');
+
+    if (navLinks && navLinks.length) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const activeLink = document.querySelector(`[data-section="${sectionId}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+        }
     }
-    
-    // Update page title
+
     const pageTitle = document.querySelector('.page-title');
-    switch(sectionId) {
-        case 'dashboard':
-            pageTitle.textContent = 'Дашборд';
-            loadDashboard();
-            break;
-        case 'jobs':
-            pageTitle.textContent = 'Вакансии';
-            loadJobsTable();
-            break;
-        case 'applications':
-            pageTitle.textContent = 'Заявки';
-            loadApplicationsTable();
-            break;
-        case 'settings':
-            pageTitle.textContent = 'Настройки';
-            loadSettings();
-            break;
+    if (pageTitle) {
+        switch(sectionId) {
+            case 'dashboard':
+                pageTitle.textContent = 'Дашборд';
+                loadDashboard();
+                break;
+            case 'jobs':
+                pageTitle.textContent = 'Вакансии';
+                loadJobsTable();
+                break;
+            case 'applications':
+                pageTitle.textContent = 'Заявки';
+                loadApplicationsTable();
+                break;
+            case 'settings':
+                pageTitle.textContent = 'Настройки';
+                loadSettings();
+                break;
+        }
     }
 }
+
+function setupNavigation() {
+    document.addEventListener('click', function(e) {
+        if (sidebarToggle && e.target.closest('.sidebar-toggle')) {
+            if (sidebar) sidebar.classList.toggle('active');
+            return;
+        }
+        
+        const navLink = e.target.closest('.nav-link');
+        if (navLink && navLink.hasAttribute('data-section')) {
+            e.preventDefault();
+            const section = navLink.getAttribute('data-section');
+            showSection(section);
+
+            if (window.innerWidth <= 1024 && sidebar) {
+                sidebar.classList.remove('active');
+            }
+        }
+
+        if (e.target.closest('.btn-primary') && e.target.closest('.btn-primary').textContent.includes('Добавить вакансию')) {
+            e.preventDefault();
+            showAddJobModal();
+        }
+
+        if (e.target.closest('.btn-primary') && e.target.closest('.btn-primary').textContent.includes('Сохранить настройки')) {
+            e.preventDefault();
+            updateSettings();
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initDOMElements();
+    setupNavigation();
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterApplications);
+    }
+    showSection('dashboard');
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 1024 && sidebar) {
+            sidebar.classList.remove('active');
+        }
+    });
+});
+
 
 // Dashboard functions
 async function loadDashboard() {
@@ -94,6 +144,7 @@ function updateStats(stats) {
     const weekEl = document.getElementById('pendingApplications');
     if (weekEl) weekEl.textContent = stats.apps_last_week || 0;
 }
+
 
 // Jobs functions
 async function loadJobsTable() {
@@ -183,6 +234,188 @@ function renderJobsTable(jobs) {
         tbody.appendChild(row);
     });
 }
+
+function closeAddJobModal() {
+    document.getElementById('addJobModal').style.display = 'none';
+    document.getElementById('addJobForm').reset();
+}
+
+async function submitAddJob() {
+    try {
+        const salaryValue = document.getElementById('jobSalary').value;
+        
+        const jobData = {
+            title: document.getElementById('jobTitle').value.trim(),
+            description: document.getElementById('jobDescription').value.trim(),
+            location: document.getElementById('jobLocation').value.trim(),
+            salary: salaryValue ? parseFloat(salaryValue) : null,
+            Requirements: document.getElementById('jobRequirements').value.trim(),
+            Conditions_and_benefits: document.getElementById('jobConditions').value.trim()
+        };
+        if (!jobData.title || !jobData.description || !jobData.location) {
+            showNotification('Заполните обязательные поля: название, описание и локация', 'error');
+            return;
+        }
+        
+        console.log('Отправляемые данные:', jobData);
+        const response = await fetch(`${API_BASE_URL}/new_job`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(jobData)
+        });
+        if (response.ok) {
+            const result = await response.json();
+            showNotification('Вакансия успешно добавлена!', 'success');
+            closeModal('addJobModal');
+            loadJobsTable();
+            loadDashboard();
+        } else if (response.status === 422) {
+            const errorData = await response.json();
+            console.error('Ошибка валидации:', errorData);
+            
+            if (errorData.detail) {
+                if (Array.isArray(errorData.detail)) {
+                    const errorMessages = errorData.detail.map(error => 
+                        `${error.loc && error.loc.length > 1 ? error.loc[1] + ': ' : ''}${error.msg}`
+                    );
+                    showNotification(errorMessages.join(', '), 'error');
+                } else {
+                    showNotification(errorData.detail, 'error');
+                }
+            } else {
+                showNotification('Ошибка валидации данных', 'error');
+            }
+        } else {
+            const errorText = await response.text();
+            console.error('Ошибка сервера:', response.status, errorText);
+            showNotification(`Ошибка сервера: ${response.status}`, 'error');
+        }
+    } catch (error) {
+        console.error('Ошибка добавления вакансии:', error);
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            showNotification('Ошибка подключения к серверу', 'error');
+        } else {
+            showNotification('Неизвестная ошибка при добавлении вакансии', 'error');
+        }
+    }
+}
+
+function editJob(id) {
+    const job = jobsData.find(j => j.id === id);
+    if (!job) {
+        showNotification('Вакансия не найдена', 'error');
+        return;
+    }
+    document.getElementById('editJobId').value = job.id;
+    document.getElementById('editJobTitle').value = job.title || '';
+    document.getElementById('editJobDescription').value = job.description || '';
+    document.getElementById('editJobLocation').value = job.location || '';
+    document.getElementById('editJobSalary').value = job.salary || '';
+    document.getElementById('editJobRequirements').value = job.Requirements || job.requirements || '';
+    document.getElementById('editJobConditions').value = job.Conditions_and_benefits || job.conditions_and_benefits || '';
+
+    document.getElementById('editJobModal').style.display = 'block';
+}
+
+async function submitEditJob() {
+    try {
+        const jobId = document.getElementById('editJobId').value;
+        
+        const jobData = {
+            title: document.getElementById('editJobTitle').value.trim(),
+            description: document.getElementById('editJobDescription').value.trim(),
+            location: document.getElementById('editJobLocation').value.trim(),
+            salary: document.getElementById('editJobSalary').value ? 
+                   parseFloat(document.getElementById('editJobSalary').value) : null,
+            Requirements: document.getElementById('editJobRequirements').value.trim(),
+            Conditions_and_benefits: document.getElementById('editJobConditions').value.trim()
+        };
+        
+        if (!jobData.title || !jobData.description || !jobData.location) {
+            showNotification('Заполните обязательные поля: название, описание и локация', 'error');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(jobData)
+        });
+
+        if (response.ok) {
+            showNotification('Вакансия успешно обновлена!', 'success');
+            closeModal('editJobModal');
+            loadJobsTable();
+            loadDashboard();
+        } else if (response.status === 422) {
+            const errorData = await response.json();
+            console.error('Ошибка валидации:', errorData);
+            
+            if (errorData.detail) {
+                if (Array.isArray(errorData.detail)) {
+                    const errorMessages = errorData.detail.map(error => 
+                        `${error.loc && error.loc.length > 1 ? error.loc[1] + ': ' : ''}${error.msg}`
+                    );
+                    showNotification(errorMessages.join(', '), 'error');
+                } else {
+                    showNotification(errorData.detail, 'error');
+                }
+            } else {
+                showNotification('Ошибка валидации данных', 'error');
+            }
+        } else {
+            const errorText = await response.text();
+            console.error('Ошибка сервера:', response.status, errorText);
+            showNotification(`Ошибка сервера: ${response.status}`, 'error');
+        }
+    } catch (error) {
+        console.error('Ошибка обновления вакансии:', error);
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            showNotification('Ошибка подключения к серверу', 'error');
+        } else {
+            showNotification('Неизвестная ошибка при обновлении вакансии', 'error');
+        }
+    }
+}
+
+async function deleteJob(id) {
+    if (!confirm('Вы уверены, что хотите удалить эту вакансию?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showNotification('Вакансия успешно удалена!', 'success');
+            loadJobsTable();
+            loadDashboard();
+        } else {
+            const errorData = await response.json();
+            showNotification(
+                `Ошибка удаления: ${errorData.detail || 'Неизвестная ошибка'}`,
+                'error'
+            );
+        }
+    } catch (error) {
+        console.error('Ошибка удаления вакансии:', error);
+        showNotification('Ошибка подключения к серверу', 'error');
+    }
+}
+
+function showAddJobModal() {
+    const modal = document.getElementById('addJobModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
 // Applications functions
 async function loadApplicationsTable() {
     try {
@@ -197,24 +430,6 @@ async function loadApplicationsTable() {
     } catch (error) {
         console.error('Ошибка загрузки заявок:', error);
         showNotification('Ошибка загрузки заявок', 'error');
-    }
-}
-
-function getStatusClass(status) {
-    switch(status) {
-        case 'pending': return 'status-pending';
-        case 'approved': return 'status-approved';
-        case 'rejected': return 'status-rejected';
-        default: return 'status-pending';
-    }
-}
-
-function getStatusText(status) {
-    switch(status) {
-        case 'pending': return 'Ожидает';
-        case 'approved': return 'Одобрено';
-        case 'rejected': return 'Отклонено';
-        default: return 'Ожидает';
     }
 }
 
@@ -261,106 +476,10 @@ function renderApplicationsTable(applications) {
                 <button class="btn btn-sm btn-info" onclick="viewApplication(${app.id})" title="Открыть карточку">
                     <i class="fas fa-eye"></i>
                 </button>
-                ${app.status === 'pending' ? `
-                    <button class="btn btn-sm btn-success" onclick="approveApplication(${app.id})" title="Одобрить">
-                        <i class="fas fa-check"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="rejectApplication(${app.id})" title="Отклонить">
-                        <i class="fas fa-times"></i>
-                    </button>
-                ` : ''}
             </td>
         `;
         tbody.appendChild(row);
     });
-}
-
-async function approveApplication(applicationId = null) {
-    const id = applicationId || currentApplicationId;
-    if (!id) return;
-    
-    try {
-        const formData = new FormData();
-        formData.append('status', 'approved');
-        
-        const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
-            method: 'PUT',
-            body: formData
-        });
-        
-        if (response.ok) {
-            showNotification('Заявка одобрена!', 'success');
-            closeApplicationModal();
-            loadApplicationsTable();
-            loadDashboard();
-        } else {
-            const error = await response.json();
-            showNotification(`Ошибка: ${error.detail}`, 'error');
-        }
-    } catch (error) {
-        console.error('Ошибка одобрения заявки:', error);
-        showNotification('Ошибка одобрения заявки', 'error');
-    }
-}
-
-async function rejectApplication(applicationId = null) {
-    const id = applicationId || currentApplicationId;
-    if (!id) return;
-    
-    try {
-        const formData = new FormData();
-        formData.append('status', 'rejected');
-        
-        const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
-            method: 'PUT',
-            body: formData
-        });
-        
-        if (response.ok) {
-            showNotification('Заявка отклонена!', 'success');
-            closeApplicationModal();
-            loadApplicationsTable();
-            loadDashboard();
-        } else {
-            const error = await response.json();
-            showNotification(`Ошибка: ${error.detail}`, 'error');
-        }
-    } catch (error) {
-        console.error('Ошибка отклонения заявки:', error);
-        showNotification('Ошибка отклонения заявки', 'error');
-    }
-}
-
-async function filterApplications() {
-    try {
-        const statusFilter = document.getElementById('statusFilter');
-        const selectedStatus = statusFilter.value;
-        
-        if (!selectedStatus) {
-            await loadApplicationsTable();
-            return;
-        }
-
-        const response = await fetch(`${API_BASE_URL}/applications/filter/${selectedStatus}`, {
-            method: 'GET'
-        });
-        
-        if (response.ok) {
-            showNotification('Фильтр применен', 'success');
-            
-            const filteredApplications = await response.json();
-            
-            updateApplicationsTable(filteredApplications);
-            
-            await loadDashboard();
-        } else {
-            const error = await response.json();
-            showNotification(`Ошибка: ${error.detail}`, 'error');
-        }
-    } catch (error) {
-        console.error('Ошибка фильтрации заявок:', error);
-        showNotification('Ошибка фильтрации заявок', 'error');
-    }
 }
 
 function updateApplicationsTable(applications) {
@@ -390,14 +509,6 @@ function updateApplicationsTable(applications) {
                     <button class="btn btn-sm btn-info" onclick="viewApplication(${app.id})" title="Открыть карточку">
                         <i class="fas fa-eye"></i>
                     </button>
-                    ${app.status === 'pending' ? `
-                        <button class="btn btn-sm btn-success" onclick="approveApplication(${app.id})" title="Одобрить">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="rejectApplication(${app.id})" title="Отклонить">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    ` : ''}
                 </td>
             `;
             tableBody.appendChild(row);
@@ -405,274 +516,11 @@ function updateApplicationsTable(applications) {
     });
 }
 
-// settings
-async function updateSettings() {
-    try {
-        const formData = new FormData();
-        formData.append('site_adress', document.getElementById('siteAddress').value);
-        formData.append('site_email', document.getElementById('siteEmail').value);
-        formData.append('site_phone', document.getElementById('sitePhone').value);
-
-        const response = await fetch(`${API_BASE_URL}/settings`, {
-            method: 'PUT',
-            credentials: 'include',
-            body: formData
-        });
-        
-         if (response.ok) {
-            const updatedSettings = await response.json();
-            showNotification('Настройки успешно обновлены!', 'success');
-            
-            if (document.getElementById('currentAddress')) {
-                document.getElementById('currentAddress').textContent = updatedSettings.site_adress;
-            }
-            if (document.getElementById('currentEmail')) {
-                document.getElementById('currentEmail').textContent = updatedSettings.site_email;
-            }
-            if (document.getElementById('currentPhone')) {
-                document.getElementById('currentPhone').textContent = updatedSettings.site_phone;
-            }
-            
-            closeModal('settingsModal');
-            return updatedSettings;
-        } else {
-            const errorData = await response.json().catch(() => ({ detail: 'Неизвестная ошибка' }));
-            showNotification(`Ошибка: ${errorData.detail || 'Неизвестная ошибка'}`, 'error');
-            console.error('Ошибка сервера:', response.status, errorData);
-        }
-    } catch (error) {
-        console.error('Ошибка обновления настроек:', error);
-        showNotification('Ошибка сети при обновлении настроек', 'error');
-    }
-}
-
-async function loadSettings() {
-    try {
-        const response = await fetch('/admin-panel/settings');
-        if (response.ok) {
-            const settings = await response.json();
-
-            document.getElementById('siteEmail').value = settings.site_email || '';
-            document.getElementById('sitePhone').value = settings.site_phone || '';
-            document.getElementById('siteAddress').value = settings.site_adress || '';
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки настроек:', error);
-    }
-}
-document.addEventListener('DOMContentLoaded', function() {
-    const settingsForm = document.getElementById('settingsForm');
-    if (settingsForm) {
-        settingsForm.addEventListener('submit',updateSettings);
-    }
-});
-
-
-function showNotification(message, type = 'info') {
-    let displayMessage;
-    
-    if (typeof message === 'string') {
-        displayMessage = message;
-    } else if (typeof message === 'object') {
-        try {
-            displayMessage = JSON.stringify(message);
-        } catch (e) {
-            displayMessage = 'Произошла ошибка';
-        }
-    } else {
-        displayMessage = String(message);
-    }
-    
-    document.querySelectorAll('.notification').forEach(n => n.remove());
-    
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = displayMessage;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
-        color: white;
-        border-radius: 8px;
-        z-index: 10000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        max-width: 400px;
-        word-wrap: break-word;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.opacity = '0';
-            notification.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }
-    }, 5000);
-}
-
-
-// Modal functions
-function showAddJobModal() {
-    const modal = document.getElementById('addJobModal');
-    if (modal) {
-        modal.style.display = 'block';
-    }
-}
-
-function closeAddJobModal() {
-    document.getElementById('addJobModal').style.display = 'none';
-    document.getElementById('addJobForm').reset();
-}
-
-async function submitAddJob() {
-    try {
-        const formData = new FormData();
-        formData.append('title', document.getElementById('jobTitle').value);
-        formData.append('description', document.getElementById('jobDescription').value);
-        formData.append('location', document.getElementById('jobLocation').value);
-        formData.append('salary', document.getElementById('jobSalary').value);
-        formData.append('Requirements', document.getElementById('jobRequirements').value);
-        formData.append('Conditions_and_benefits', document.getElementById('jobConditions').value);
-        
-        const response = await fetch(`${API_BASE_URL}/new_job`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            showNotification('Вакансия успешно добавлена!', 'success');
-            closeModal('addJobModal');
-            loadJobsTable();
-            loadDashboard();
-        } else {
-            const error = await response.json();
-            showNotification(`Ошибка: ${error.detail}`, 'error');
-        }
-    } catch (error) {
-        console.error('Ошибка добавления вакансии:', error);
-        showNotification('Ошибка добавления вакансии', 'error');
-    }
-}
-
-
-function editJob(id) {
-    const job = jobsData.find(j => j.id === id);
-    if (!job) {
-        showNotification('Вакансия не найдена', 'error');
-        return;
-    }
-    
-
-    document.getElementById('editJobId').value = job.id;
-    document.getElementById('editJobTitle').value = job.title;
-    document.getElementById('editJobDescription').value = job.description;
-    document.getElementById('editJobLocation').value = job.location;
-    document.getElementById('editJobSalary').value = job.salary;
-    document.getElementById('editJobRequirements').value = job.Requirements || job.requirements || '';
-    document.getElementById('editJobConditions').value = job.Conditions_and_benefits || job.conditions_and_benefits || '';
-    
-    
-    document.getElementById('editJobModal').style.display = 'block';
-}
-
-
-async function submitEditJob() {
-    try {
-        const jobId = document.getElementById('editJobId').value;
-        const formData = new FormData();
-        formData.append('title', document.getElementById('editJobTitle').value);
-        formData.append('description', document.getElementById('editJobDescription').value);
-        formData.append('location', document.getElementById('editJobLocation').value);
-        formData.append('salary', document.getElementById('editJobSalary').value);
-        formData.append('Requirements', document.getElementById('editJobRequirements').value);
-        formData.append('Conditions_and_benefits', document.getElementById('editJobConditions').value);
-        
-        const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
-            method: 'PUT',
-            body: formData
-        });
-        
-        if (response.ok) {
-            showNotification('Вакансия успешно обновлена!', 'success');
-            closeModal('editJobModal');
-            loadJobsTable();
-            loadDashboard();
-        } else {
-            const error = await response.json();
-            showNotification(`Ошибка: ${error.detail}`, 'error');
-        }
-    } catch (error) {
-        console.error('Ошибка обновления вакансии:', error);
-        showNotification('Ошибка обновления вакансии', 'error');
-    }
-}
-
-function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        
-        
-        if (modalId === 'addJobModal') {
-            document.getElementById('addJobForm').reset();
-        } else if (modalId === 'editJobModal') {
-            document.getElementById('editJobForm').reset();
-            document.getElementById('editJobId').value = '';
-        }
-    }
-}
-
-async function deleteJob(id) {
-    
-    if (!confirm('Вы уверены, что хотите удалить эту вакансию?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/jobs/${id}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            showNotification('Вакансия успешно удалена!', 'success');
-            loadJobsTable();
-            loadDashboard();
-        } else {
-            const errorData = await response.json();
-            showNotification(
-                `Ошибка удаления: ${errorData.detail || 'Неизвестная ошибка'}`,
-                'error'
-            );
-        }
-    } catch (error) {
-        console.error('Ошибка удаления вакансии:', error);
-        showNotification('Ошибка подключения к серверу', 'error');
-    }
-}
-
 function viewApplication(id) {
   const app = applicationsData.find(a => a.id === id);
   if (!app) return;
 
   currentApplicationId = id;
-
-
   const setText = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val || '-'; };
   setText('#appViewName', app.fio);
   setText('#appViewEmail', app.email);
@@ -737,88 +585,318 @@ function closeApplicationModal() {
     currentApplicationId = null;
 }
 
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
-    }
+async function approveApplication(applicationId = null) {
+    const id = applicationId || currentApplicationId;
+    if (!id) return;
     
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const section = link.getAttribute('data-section');
-            showSection(section);
-            
-
-            if (window.innerWidth <= 1024) {
-                sidebar.classList.remove('active');
-            }
+    try {
+        const statusData = {
+            status: 'approved'
+        };
+        
+        const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(statusData)
         });
-    });
-    
-    const jobForm = document.getElementById('jobForm');
-    if (jobForm) {
-        jobForm.addEventListener('submit', (e) => {
-            e.preventDefault();
+        
+        if (response.ok) {
+            showNotification('Заявка одобрена!', 'success');
+            closeApplicationModal();
+            loadApplicationsTable();
+            loadDashboard();
+        } else if (response.status === 422) {
+            const errorData = await response.json();
+            console.error('Ошибка валидации при одобрении заявки:', errorData);
             
-            const formData = new FormData(jobForm);
-            const jobData = {
-                title: formData.get('title'),
-                company: formData.get('company'),
-                location: formData.get('location'),
-                salary: formData.get('salary'),
-                type: formData.get('type'),
-                experience: formData.get('experience'),
-                description: formData.get('description'),
-                icon: formData.get('icon'),
-                status: formData.get('status')
-            };
-            
-            const editId = jobForm.dataset.editId;
-            if (editId) {
-                updateJob(parseInt(editId), jobData);
+            if (errorData.detail) {
+                if (Array.isArray(errorData.detail)) {
+                    const errorMessages = errorData.detail.map(error => 
+                        `${error.loc && error.loc.length > 1 ? error.loc[1] + ': ' : ''}${error.msg}`
+                    );
+                    showNotification(errorMessages.join(', '), 'error');
+                } else {
+                    showNotification(errorData.detail, 'error');
+                }
             } else {
-                addJob(jobData);
+                showNotification('Ошибка валидации данных', 'error');
+            }
+        } else {
+            const error = await response.json();
+            showNotification(`Ошибка: ${error.detail || 'Неизвестная ошибка'}`, 'error');
+        }
+    } catch (error) {
+        console.error('Ошибка одобрения заявки:', error);
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            showNotification('Ошибка подключения к серверу', 'error');
+        } else {
+            showNotification('Ошибка одобрения заявки', 'error');
+        }
+    }
+}
+
+async function rejectApplication(applicationId = null) {
+    const id = applicationId || currentApplicationId;
+    if (!id) return;
+    
+    try {
+        const statusData = {
+            status: 'rejected'
+        };
+        
+        const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(statusData)
+        });
+        
+        if (response.ok) {
+            showNotification('Заявка отклонена!', 'success');
+            closeApplicationModal();
+            loadApplicationsTable();
+            loadDashboard();
+        } else if (response.status === 422) {
+            const errorData = await response.json();
+            console.error('Ошибка валидации при отклонении заявки:', errorData);
+            
+            if (errorData.detail) {
+                if (Array.isArray(errorData.detail)) {
+                    const errorMessages = errorData.detail.map(error => 
+                        `${error.loc && error.loc.length > 1 ? error.loc[1] + ': ' : ''}${error.msg}`
+                    );
+                    showNotification(errorMessages.join(', '), 'error');
+                } else {
+                    showNotification(errorData.detail, 'error');
+                }
+            } else {
+                showNotification('Ошибка валидации данных', 'error');
+            }
+        } else {
+            const error = await response.json();
+            showNotification(`Ошибка: ${error.detail || 'Неизвестная ошибка'}`, 'error');
+        }
+    } catch (error) {
+        console.error('Ошибка отклонения заявки:', error);
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            showNotification('Ошибка подключения к серверу', 'error');
+        } else {
+            showNotification('Ошибка отклонения заявки', 'error');
+        }
+    }
+}
+
+async function filterApplications() {
+    try {
+        const statusFilter = document.getElementById('statusFilter');
+        if (!statusFilter) {
+            console.error('Элемент statusFilter не найден');
+            return;
+        }
+        
+        const selectedStatus = statusFilter.value;
+        
+        if (!selectedStatus) {
+            await loadApplicationsTable();
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/applications/filter/${selectedStatus}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
             }
         });
+        
+        if (response.ok) {
+            const filteredApplications = await response.json();
+            updateApplicationsTable(filteredApplications);
+        } else if (response.status === 404) {
+            console.warn('Endpoint фильтрации не найден, используем клиентскую фильтрацию');
+            await loadApplicationsTable(); 
+            filterApplicationsClientSide(selectedStatus);
+        } else {
+            const error = await response.json();
+            showNotification(`Ошибка: ${error.detail || 'Неизвестная ошибка'}`, 'error');
+        }
+    } catch (error) {
+        console.error('Ошибка фильтрации заявок:', error);
+        showNotification('Ошибка фильтрации заявок', 'error');
     }
-    
-    const settingsForm = document.getElementById('settingsForm');
-    if (settingsForm) {
-        settingsForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            updateSettings();
+}
+
+
+function getStatusClass(status) {
+    switch(status) {
+        case 'pending': return 'status-pending';
+        case 'approved': return 'status-approved';
+        case 'rejected': return 'status-rejected';
+        default: return 'status-pending';
+    }
+}
+
+function getStatusText(status) {
+    switch(status) {
+        case 'pending': return 'Ожидает';
+        case 'approved': return 'Одобрено';
+        case 'rejected': return 'Отклонено';
+        default: return 'Ожидает';
+    }
+}
+
+
+// settings
+async function updateSettings() {
+    try {
+        const settingsData = {
+            site_adress: document.getElementById('siteAddress').value.trim(),
+            site_email: document.getElementById('siteEmail').value.trim(),
+            site_phone: document.getElementById('sitePhone').value.trim()
+        };
+
+        const response = await fetch(`${API_BASE_URL}/settings`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(settingsData)
         });
-    }
-    
-    document.querySelectorAll('.close').forEach(closeBtn => {
-        closeBtn.addEventListener('click', () => {
-            const modal = closeBtn.closest('.modal');
-            if (modal) {
-                closeModal(modal.id);
+        
+        if (response.ok) {
+            const updatedSettings = await response.json();
+            showNotification('Настройки успешно обновлены!', 'success');
+            
+            if (document.getElementById('currentAddress')) {
+                document.getElementById('currentAddress').textContent = updatedSettings.site_adress;
             }
-        });
-    });
-    
-    window.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
-            closeModal(e.target.id);
+            if (document.getElementById('currentEmail')) {
+                document.getElementById('currentEmail').textContent = updatedSettings.site_email;
+            }
+            if (document.getElementById('currentPhone')) {
+                document.getElementById('currentPhone').textContent = updatedSettings.site_phone;
+            }
+            
+            closeModal('settingsModal');
+            return updatedSettings;
+        } else if (response.status === 422) {
+            const errorData = await response.json();
+            console.error('Ошибка валидации настроек:', errorData);
+            
+            if (errorData.detail) {
+                if (Array.isArray(errorData.detail)) {
+                    const errorMessages = errorData.detail.map(error => 
+                        `${error.loc && error.loc.length > 1 ? error.loc[1] + ': ' : ''}${error.msg}`
+                    );
+                    showNotification(errorMessages.join(', '), 'error');
+                } else {
+                    showNotification(errorData.detail, 'error');
+                }
+            } else {
+                showNotification('Ошибка валидации данных настроек', 'error');
+            }
+        } else {
+            const errorData = await response.json().catch(() => ({ detail: 'Неизвестная ошибка' }));
+            showNotification(`Ошибка: ${errorData.detail || 'Неизвестная ошибка'}`, 'error');
+            console.error('Ошибка сервера:', response.status, errorData);
         }
-        if (window.innerWidth <= 1024 && 
-            !sidebar.contains(e.target) && 
-            !sidebarToggle.contains(e.target) && 
-            sidebar.classList.contains('active')) {
-            sidebar.classList.remove('active');
+    } catch (error) {
+        console.error('Ошибка обновления настроек:', error);
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            showNotification('Ошибка подключения к серверу', 'error');
+        } else {
+            showNotification('Неизвестная ошибка при обновлении настроек', 'error');
         }
-    });
-    
-    showSection('dashboard');
-    
-    window.addEventListener('resize', () => {
-        if (window.innerWidth > 1024) {
-            sidebar.classList.remove('active');
+    }
+}
+async function loadSettings() {
+    try {
+        const response = await fetch('/admin-panel/settings');
+        if (response.ok) {
+            const settings = await response.json();
+            document.getElementById('siteEmail').value = settings[0].site_email || '';
+            document.getElementById('sitePhone').value = settings[0].site_phone || '';
+            document.getElementById('siteAddress').value = settings[0].site_adress || '';
         }
-    });
-}); 
+    } catch (error) {
+        console.error('Ошибка загрузки настроек:', error);
+    }
+}
+
+
+// Modal functions
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        
+        if (modalId === 'addJobModal') {
+            document.getElementById('addJobForm').reset();
+        } else if (modalId === 'editJobModal') {
+            document.getElementById('editJobForm').reset();
+            document.getElementById('editJobId').value = '';
+        }
+    }
+}
+
+function showNotification(message, type = 'info') {
+    let displayMessage;
+    
+    if (typeof message === 'string') {
+        displayMessage = message;
+    } else if (typeof message === 'object') {
+        try {
+            displayMessage = JSON.stringify(message);
+        } catch (e) {
+            displayMessage = 'Произошла ошибка';
+        }
+    } else {
+        displayMessage = String(message);
+    }
+    
+    document.querySelectorAll('.notification').forEach(n => n.remove());
+    
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = displayMessage;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+        color: white;
+        border-radius: 8px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        max-width: 400px;
+        word-wrap: break-word;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 5000);
+}

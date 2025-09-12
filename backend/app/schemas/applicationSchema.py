@@ -50,5 +50,5 @@ class ApplicationSchema(BaseModel):
         
         return v
     
-class GetStatusApplicationSchema(ApplicationSchema):
+class GetStatusApplicationSchema(BaseModel):
     status: str

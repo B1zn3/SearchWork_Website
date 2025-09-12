@@ -26,7 +26,7 @@ async def get_settings(
 
 @setting_rout.put('/settings', tags=['admin-setting'], summary='update site settings')
 async def update_settings(
-    setting_data: SettingSchema = Depends(),
+    setting_data: SettingSchema,
     db: Session = Depends(get_db),
     skip: int =  0,
     limit: int = 10

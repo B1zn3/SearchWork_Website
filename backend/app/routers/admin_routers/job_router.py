@@ -25,7 +25,7 @@ async def get_all_jobs(
 
 @job_rout.post('/new_job', tags=['admin-job'], summary='create new job')
 async def create_job(
-    job_data: JobCreateSchema = Depends(),
+    job_data: JobCreateSchema,
     db: Session = Depends(get_db)
 ):
     try:
@@ -56,7 +56,7 @@ async def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
 @job_rout.put('/jobs/{job_id}', tags=['admin-job'], summary='update job')
 async def update_job(
     job_id: int,
-    job_data: JobCreateSchema = Depends(),
+    job_data: JobCreateSchema,
     db: Session = Depends(get_db)
 ):
     try:
@@ -92,4 +92,4 @@ async def delete_job(job_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=400,
             detail=f'Ошибка удаления вакансии: {str(e)}'
-        )
+        ) 
