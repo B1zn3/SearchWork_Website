@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from utils.outh_admin import require_admin
 from core.db_dependencies import get_db
 from sqlalchemy.orm import Session
-from utils.send_email import send_email
+from utils.send_email import send_email_async
 
 from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse
@@ -46,7 +46,7 @@ async def get_status_application(
         solve = False
         if app_data.status == 'approved':
             solve = True
-        task = BackgroundTask(send_email, mail=application.email, solve=solve, name=application.fio, login=login)
+        task = BackgroundTask(send_email_async, mail=application.email, solve=solve, name=application.fio, login=login)
         return JSONResponse(
             {'message': f'Статус заявки успешно изменен на {app_data.status}'
         }, background=task)
