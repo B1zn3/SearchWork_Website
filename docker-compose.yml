@@ -21,7 +21,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql+psycopg2://webuser:webpass@db:5432/websearch
+      DATABASE_URL: ${DATABASE_URL}
 
 volumes:
   pgdata:

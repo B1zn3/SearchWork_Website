@@ -143,67 +143,97 @@
         </div>
     </footer>
 
-    <!-- Job Detail Modal -->
-    <div id="jobDetailModal" class="modal">
-        <div class="modal-content job-detail-modal">
-            <div class="modal-header">
-                <h2 id="jobDetailTitle">Название профессии</h2>
-                <button class="modal-close" onclick="closeJobDetailModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="job-detail-content">
-                    <div class="job-info-column">
-                        <!-- Job Info -->
-                        <div class="job-info">
-                            <div class="job-header">
-                                <div class="job-salary">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                    <span id="jobSalary">Зарплата</span>
-                                </div>
-                                <div class="job-location">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span id="jobLocation">Местоположение</span>
-                                </div>
-                                <div class="job-date">
-                                    <i class="fas fa-calendar"></i>
-                                    <span id="jobDate">Дата публикации</span>
-                                </div>
+<!-- Job Detail Modal -->
+<div id="jobDetailModal" class="modal">
+    <div class="modal-content job-detail-modal">
+        <div class="modal-header">
+            <h2 id="jobDetailTitle">Название профессии</h2>
+            <button class="modal-close" onclick="closeJobDetailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="job-detail-content">
+                <div class="job-info-column">
+                    <!-- Job Info -->
+                    <div class="job-info">
+                        <div class="job-header">
+                            <div class="job-salary">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span id="jobSalary">Зарплата</span>
                             </div>
-
-                            <!-- Job Description -->
-                            <div class="job-description-section">
-                                <h3>Описание профессии</h3>
-                                <div id="jobDescription" class="job-description-text">
-                                </div>
+                            <div class="job-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="jobLocation">Местоположение</span>
                             </div>
-
-                            <!-- Job Requirements -->
-                            <div class="job-requirements">
-                                <h3>Требования</h3>
-                                <div id="jobRequirements">
-                                </div>
+                            <div class="job-date">
+                                <i class="fas fa-calendar"></i>
+                                <span id="jobDate">Дата публикации</span>
                             </div>
+                        </div>
 
-                            <!-- Job Benefits-->
-                            <div class="job-benefits">
-                                <h3>Условия и льготы</h3>
-                                <div id="jobBenefits">
-                                </div>
+                        <!-- Job Description -->
+                        <div class="job-description-section">
+                            <h3>Описание профессии</h3>
+                            <div id="jobDescription" class="job-description-text">
+                            </div>
+                        </div>
+
+                        <!-- Job Requirements -->
+                        <div class="job-requirements">
+                            <h3>Требования</h3>
+                            <div id="jobRequirements">
+                            </div>
+                        </div>
+
+                        <!-- Job Benefits-->
+                        <div class="job-benefits">
+                            <h3>Условия и льготы</h3>
+                            <div id="jobBenefits">
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="openApplicationModal()">
-                    <i class="fas fa-paper-plane"></i>
-                    Подать заявку
-                </button>
+                
+                <!-- Медиагалерея - добавлено справа -->
+                <div class="media-gallery-column">
+                    <div class="media-gallery-section">
+                        <h3>Фото и видео</h3>
+                        <div class="media-gallery" id="jobMediaGallery">
+                            <div class="media-display">
+                                <!-- Основное отображение медиа -->
+                                <div class="empty-state">
+                                    <i class="fas fa-camera"></i>
+                                    <p>Нет фото и видео</p>
+                                </div>
+                            </div>
+                            <div class="thumbnails">
+                                <!-- Миниатюры будут добавлены через JS -->
+                            </div>
+                            <div class="media-actions">
+                                <button class="action-btn fullscreen-toggle">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                            </div>
+                            <button class="nav-btn prev">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="nav-btn next">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="openApplicationModal()">
+                <i class="fas fa-paper-plane"></i>
+                Подать заявку
+            </button>
+        </div>
     </div>
+</div>
 
     <!-- Application Modal -->
     <div id="applicationModal" class="modal">
