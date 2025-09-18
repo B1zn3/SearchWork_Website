@@ -21,7 +21,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql://webuser:webuser@localhost:5432/websearch
 
 volumes:
   pgdata:

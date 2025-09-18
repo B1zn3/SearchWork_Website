@@ -1,6 +1,6 @@
 from crud.baseCrud import BaseCRUD
 from sqlalchemy.orm import Session
-from models.model import Jobs
+from models.model import Jobs, JobPhoto
 from schemas.jobSchema import JobCreateSchema, JobUpdateSchema
 
 class JobCRUD(BaseCRUD):
@@ -8,8 +8,19 @@ class JobCRUD(BaseCRUD):
         super().__init__(Jobs)
     
     def create_job(self, db: Session, job_data: JobCreateSchema):
-        return super().create(db, job_data)
-    
+        photo_urls = job_data.photos if hasattr(job_data, "photos") else []
+        photo_objs = [JobPhoto(url=str(url)) for url in photo_urls]
+
+        job_fields = job_data.model_dump(exclude={'photos'})
+        job = Jobs(**job_fields)
+        job.photos = photo_objs
+
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+
+        return job
+
     def update_job(self, db: Session, id: int, job_data: JobUpdateSchema):
         return super().update(db, id, job_data)
     

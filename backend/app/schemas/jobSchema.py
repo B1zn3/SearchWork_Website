@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
 
 class JobSchema(BaseModel):
@@ -11,7 +11,7 @@ class JobSchema(BaseModel):
     Conditions_and_benefits: Optional[str] = None
 
 class JobCreateSchema(JobSchema):
-    pass
+    photos: List[str]
 
 class JobUpdateSchema(JobSchema):
     pass

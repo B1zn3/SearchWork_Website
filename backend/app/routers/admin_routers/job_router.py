@@ -8,6 +8,8 @@ from crud.applicationCRUD import applicationcrud
 
 from schemas.jobSchema import JobCreateSchema
 
+from services.s3.s3_interaction import s3_client
+
 
 job_rout = APIRouter(prefix='/admin-panel', dependencies=[Depends(require_admin)])
 
@@ -30,6 +32,7 @@ async def create_job(
 ):
     try:
         jobcrud.create_job(db, job_data)
+        await s3_client.upload_files(job_data.photos)
         return {
             "message": "Вакансия успешно создана"
         }

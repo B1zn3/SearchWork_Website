@@ -28,11 +28,10 @@ class S3Client():
     async def upload_files(self, files: list[str]):
         async with self.get_client() as client:
             async def upload(file: str):
-                object_name = file.split('/')[-1]
                 async with aiofiles.open(file, 'rb') as f:
                     await client.put_object(
                         Bucket=self.bucket_name,
-                        Key=object_name,
+                        Key=file,
                         Body=await f.read()
                     )
             await asyncio.gather(*(upload(file) for file in files))

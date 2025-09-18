@@ -8,5 +8,5 @@ backup.sql
 __pycache__/          
 .venv/                
 .vscode/settings.json  
-
+.yml
        
