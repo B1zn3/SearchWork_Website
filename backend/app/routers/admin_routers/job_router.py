@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body
 from utils.outh_admin import require_admin
 from sqlalchemy.orm import Session
 from core.db_dependencies import get_db
+from uuid import uuid4
+from pathlib import Path
+from typing import List
 
 from crud.jobCRUD import jobcrud
 from crud.applicationCRUD import applicationcrud
@@ -32,7 +35,6 @@ async def create_job(
 ):
     try:
         jobcrud.create_job(db, job_data)
-        await s3_client.upload_files(job_data.photos)
         return {
             "message": "Вакансия успешно создана"
         }
@@ -43,6 +45,27 @@ async def create_job(
             detail=f'Ошибка добавления вакансии: {str(e)}'
         )
     
+@job_rout.post('/upload-images', tags=['admin-job'], summary='upload images to s3')
+async def upload_images(photos: List[UploadFile] = File(...)):
+    urls = []
+    try:
+        for file in photos:
+            ext = Path(file.filename).suffix
+            key = f"jobs/{uuid4()}{ext}"
+            content = await file.read()
+            await s3_client.upload_content(key, content, file.content_type)
+            url = f"{s3_client.config['endpoint_url'].rstrip('/')}/{s3_client.bucket_name}/{key}"
+            urls.append(url)
+        return {"urls": urls}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка загрузки: {e}")
+
+@job_rout.post("/delete-images", tags=["admin-job"], summary='delete images from s3')
+async def delete_images(keys: List[str] = Body(...)):
+    await s3_client.delete_files(keys)
+    return {"deleted": len(keys)}
+
+
 @job_rout.get('/jobs/{job_id}', tags=['admin-job'], summary='get job by id')
 async def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
     try:
@@ -84,8 +107,15 @@ async def delete_job(job_id: int, db: Session = Depends(get_db)):
                 status_code=400,
                 detail="Невозможно удалить вакансию, так как с ней связаны заявки"
             )
-            
+        
+        photo_keys = jobcrud.get_job_photos_keys(db, job_id)
+
+        if photo_keys:
+            await s3_client.delete_files(photo_keys)
+
+
         job = jobcrud.remove_job(db, job_id)
+        
         if not job:
             raise HTTPException(status_code=404, detail='Вакансия не найдена')
         

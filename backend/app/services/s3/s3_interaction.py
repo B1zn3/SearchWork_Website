@@ -25,16 +25,14 @@ class S3Client():
         async with self.session.create_client('s3', **self.config) as client:
             yield client
 
-    async def upload_files(self, files: list[str]):
+    async def upload_content(self, key: str, content: bytes, content_type: str = None):
         async with self.get_client() as client:
-            async def upload(file: str):
-                async with aiofiles.open(file, 'rb') as f:
-                    await client.put_object(
-                        Bucket=self.bucket_name,
-                        Key=file,
-                        Body=await f.read()
-                    )
-            await asyncio.gather(*(upload(file) for file in files))
+            await client.put_object(
+                Bucket=self.bucket_name,
+                Key=key,
+                Body=content,
+                ContentType=content_type
+            )
     
     async def delete_files(self, files: list[str]):
         async with self.get_client() as client:

@@ -27,6 +27,14 @@ class JobCRUD(BaseCRUD):
     def remove_job(self, db: Session, id: int):
         return super().delete(db, id)
     
+    def get_job_photos_keys(self, db: Session, job_id: int):
+        photos = db.query(JobPhoto).filter(JobPhoto.job_id == job_id).all()
+        keys = []
+        for photo in photos:
+            key = 'jobs/'+photo.url.split('/')[-1]
+            keys.append(key)
+        return keys
+    
 
 jobcrud = JobCRUD()
     
