@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator, EmailStr
 import re
 from typing import Optional
+from schemas.jobSchema import JobSchema
 
 
 class ApplicationSchema(BaseModel):

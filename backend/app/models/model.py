@@ -18,7 +18,7 @@ class Jobs(Base):
     Requirements: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     Conditions_and_benefits: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     photos: Mapped[List["JobPhoto"]] = relationship("JobPhoto", back_populates="job", cascade="all, delete-orphan", lazy="selectin")
-    applications: Mapped[List["Applications"]] = relationship('Applications', backref='job', lazy="select")
+    applications: Mapped[List["Applications"]] = relationship('Applications', back_populates='job', lazy="select")
 
 class JobPhoto(Base):
     __tablename__ = "job_photos"
@@ -37,6 +37,7 @@ class Applications(Base):
     experience: Mapped[str] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     status: Mapped[str] = mapped_column(String, nullable=False, default='pending')
+    job: Mapped["Jobs"] = relationship("Jobs", back_populates="applications")
 
 class Settings(Base):
     __tablename__ = "settings"

@@ -1,12 +1,15 @@
 from crud.baseCrud import BaseCRUD
 from schemas.applicationSchema import ApplicationSchema
-from models.model import Applications
-from sqlalchemy.orm import Session
+from models.model import Applications, Jobs
+from sqlalchemy.orm import Session, joinedload
 
 
 class ApplicationCRUD(BaseCRUD):
     def __init__(self):
         super().__init__(Applications)
+
+    def get_all(self, db: Session, skip: int, limit: int):
+        return db.query(self.model).options(joinedload(self.model.job)).offset(skip).limit(limit).all()
 
     def create(self, db: Session, obj_data: ApplicationSchema):
         return super().create(db, obj_data)

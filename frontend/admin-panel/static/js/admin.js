@@ -559,13 +559,12 @@ function updateApplicationsTable(applications) {
 function viewApplication(id) {
   const app = applicationsData.find(a => a.id === id);
   if (!app) return;
-
   currentApplicationId = id;
   const setText = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val || '-'; };
   setText('#appViewName', app.fio);
   setText('#appViewEmail', app.email);
   setText('#appViewPhone', app.phone);
-  setText('#appViewJob', app.job_title); 
+  setText('#appViewJob', app.job && app.job.title ? app.job.title : '-');
   setText('#appViewDate', app.created_at ? new Date(app.created_at).toLocaleString('ru-RU') : '-');
   setText('#appViewExperience', app.experience);
 
@@ -577,6 +576,7 @@ function viewApplication(id) {
   const modal = document.getElementById('applicationViewModal');
   if (modal) modal.style.display = 'block';
 }
+
 
 function showApplicationModal(application) {
     const modal = document.getElementById('applicationModal');

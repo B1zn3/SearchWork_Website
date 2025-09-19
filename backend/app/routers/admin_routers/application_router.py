@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from utils.outh_admin import require_admin
 from core.db_dependencies import get_db
 from sqlalchemy.orm import Session
-from utils.send_email import send_email_async
+from services.email.send_email import send_email_async
 
 from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse
@@ -61,7 +61,6 @@ async def filter_applications(
     db: Session = Depends(get_db)):
     try:
         applications = applicationcrud.filter_application(db, status)
-
         return applications
     except Exception as e:
         db.rollback()

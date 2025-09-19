@@ -5,6 +5,10 @@ from core.db_dependencies import get_db
 from uuid import uuid4
 from pathlib import Path
 from typing import List
+import asyncio
+
+from starlette.background import BackgroundTask
+from starlette.responses import JSONResponse
 
 from crud.jobCRUD import jobcrud
 from crud.applicationCRUD import applicationcrud
@@ -53,17 +57,18 @@ async def upload_images(photos: List[UploadFile] = File(...)):
             ext = Path(file.filename).suffix
             key = f"jobs/{uuid4()}{ext}"
             content = await file.read()
-            await s3_client.upload_content(key, content, file.content_type)
+            asyncio.create_task(s3_client.upload_content(key, content, file.content_type))
             url = f"{s3_client.config['endpoint_url'].rstrip('/')}/{s3_client.bucket_name}/{key}"
             urls.append(url)
-        return {"urls": urls}
+        return JSONResponse({"urls": urls})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка загрузки: {e}")
 
 @job_rout.post("/delete-images", tags=["admin-job"], summary='delete images from s3')
 async def delete_images(keys: List[str] = Body(...)):
-    await s3_client.delete_files(keys)
-    return {"deleted": len(keys)}
+    asyncio.create_task(s3_client.delete_files(keys)) 
+    return JSONResponse({"deleted": len(keys)})
+
 
 
 @job_rout.get('/jobs/{job_id}', tags=['admin-job'], summary='get job by id')
