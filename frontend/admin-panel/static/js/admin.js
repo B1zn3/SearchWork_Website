@@ -2,6 +2,13 @@ const API_BASE_URL = '/admin-panel';
 
 let sidebar, mainContent, navLinks, sidebarToggle;
 let dashboardSection, jobsSection, applicationsSection, settingsSection;
+let selectedJobImages = []; 
+let uploadedImageUrls = [];
+
+let uploadedJobImageUrls = [];
+
+selectedJobImages = [];
+renderJobImagesList();
 
 let jobsData = [];
 let applicationsData = [];
@@ -60,6 +67,36 @@ function showSection(sectionId) {
         }
     }
 }
+
+document.getElementById('addJobImageBtn').onclick = function() {
+    document.getElementById('jobImageInput').value = '';
+    document.getElementById('jobImageInput').click();
+};
+
+document.getElementById('jobImageInput').onchange = function(event) {
+    // Дополняем массив, не теряя старые позиции.
+    const newFiles = Array.from(event.target.files || []);
+    selectedJobImages = selectedJobImages.concat(newFiles);
+    renderJobImagesList();
+};
+
+function renderJobImagesList() {
+    const container = document.getElementById('jobImagesList');
+    container.innerHTML = '';
+    selectedJobImages.forEach((file, idx) => {
+        const div = document.createElement('div');
+        div.textContent = file.name;
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '✕';
+        removeBtn.onclick = function() {
+            selectedJobImages.splice(idx, 1);
+            renderJobImagesList();
+        };
+        div.appendChild(removeBtn);
+        container.appendChild(div);
+    });
+}
+
 
 function setupNavigation() {
     document.addEventListener('click', function(e) {
@@ -164,6 +201,25 @@ async function loadJobsTable() {
     }
 }
 
+async function uploadImagesToS3(files) {
+    const formData = new FormData();
+    files.forEach(file => formData.append("photos", file));
+    const resp = await fetch(`${API_BASE_URL}/upload-images`, { method: "POST", body: formData });
+    if (!resp.ok) throw new Error('Ошибка загрузки фото');
+    const data = await resp.json();
+    return data.urls;
+}
+
+async function deleteImagesFromS3(urls) {
+    const resp = await fetch(`${API_BASE_URL}/delete-images`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls })
+    });
+    return resp.ok;
+}
+
+
 function renderJobsTable(jobs) {
     const tbody = document.querySelector('#jobsTable tbody');
     if (!tbody) {
@@ -243,7 +299,6 @@ function closeAddJobModal() {
 async function submitAddJob() {
     try {
         const salaryValue = document.getElementById('jobSalary').value;
-        
         const jobData = {
             title: document.getElementById('jobTitle').value.trim(),
             description: document.getElementById('jobDescription').value.trim(),
@@ -256,49 +311,34 @@ async function submitAddJob() {
             showNotification('Заполните обязательные поля: название, описание и локация', 'error');
             return;
         }
-        
-        console.log('Отправляемые данные:', jobData);
+
+        let imageUrls = [];
+        if (selectedJobImages.length > 0) {
+            imageUrls = await uploadImagesToS3(selectedJobImages);
+        }
+        jobData.photos = imageUrls;
+
         const response = await fetch(`${API_BASE_URL}/new_job`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(jobData)
         });
+
         if (response.ok) {
-            const result = await response.json();
-            showNotification('Вакансия успешно добавлена!', 'success');
+            showNotification('Вакансия успешно создана!', 'success');
             closeModal('addJobModal');
             loadJobsTable();
             loadDashboard();
-        } else if (response.status === 422) {
-            const errorData = await response.json();
-            console.error('Ошибка валидации:', errorData);
-            
-            if (errorData.detail) {
-                if (Array.isArray(errorData.detail)) {
-                    const errorMessages = errorData.detail.map(error => 
-                        `${error.loc && error.loc.length > 1 ? error.loc[1] + ': ' : ''}${error.msg}`
-                    );
-                    showNotification(errorMessages.join(', '), 'error');
-                } else {
-                    showNotification(errorData.detail, 'error');
-                }
-            } else {
-                showNotification('Ошибка валидации данных', 'error');
-            }
+            selectedJobImages = [];
+            renderJobImagesList();
         } else {
-            const errorText = await response.text();
-            console.error('Ошибка сервера:', response.status, errorText);
-            showNotification(`Ошибка сервера: ${response.status}`, 'error');
+            if (imageUrls.length > 0) {
+                await deleteImagesFromS3(imageUrls);
+            }
+            showNotification('Ошибка создания вакансии, фото удалены!', 'error');
         }
     } catch (error) {
-        console.error('Ошибка добавления вакансии:', error);
-        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            showNotification('Ошибка подключения к серверу', 'error');
-        } else {
-            showNotification('Неизвестная ошибка при добавлении вакансии', 'error');
-        }
+        showNotification('Неизвестная ошибка при добавлении вакансии', 'error');
     }
 }
 
@@ -825,7 +865,7 @@ async function loadSettings() {
         console.error('Ошибка загрузки настроек:', error);
     }
 }
-
+ 
 
 // Modal functions
 function openModal(modalId) {

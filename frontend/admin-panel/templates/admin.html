@@ -232,6 +232,16 @@
                         <label for="jobConditions">Условия и льготы:</label>
                         <textarea id="jobConditions" name="Conditions_and_benefits" class="form-textarea" rows="3"></textarea>
                     </div>
+                   <div class="form-group">
+                    <label>Фото вакансии:</label>
+                    <div id="jobImagesList"></div>
+                    <button type="button" class="btn btn-secondary" id="addJobImageBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                        <input type="file" id="jobImageInput" style="display:none;" accept="image/*" multiple>
+                    </div>
+
+
         
                 </form>
             </div>
@@ -281,6 +291,7 @@
                         <label for="editJobConditions">Условия и льготы:</label>
                         <textarea id="editJobConditions" name="editJobConditions" class="form-textarea" rows="3"></textarea>
                     </div>
+
                 </form>
             </div>
             <div class="modal-footer">
