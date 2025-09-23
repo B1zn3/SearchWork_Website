@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Работа.ру</title>
+    <link rel="stylesheet" href="/admin/static/css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Админ-панель</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Дашборд</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#jobs" class="nav-link" data-section="jobs">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Вакансии</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#applications" class="nav-link" data-section="applications">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Заявки</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#settings" class="nav-link" data-section="settings">
+                            <i class="fas fa-cog"></i>
+                            <span>Настройки</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title">Дашборд</h1>
+                </div>
+                <div class="header-right">
+                    <div class="admin-info">
+                        <span class="admin-name">Администратор</span>
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Активные вакансии</h3>
+                            <p class="stat-number" id="totalJobs">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Активные заявки</h3>
+                            <p class="stat-number" id="pendingApplications">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-charts">
+                    <div class="chart-container">
+                        <h3>Статистика заявок</h3>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Jobs Section -->
+            <section id="jobs" class="content-section">
+                <div class="section-header">
+                    <h2>Управление вакансиями</h2>
+                    <button class="btn btn-primary" onclick="showAddJobModal()">
+                        <i class="fas fa-plus"></i> Добавить вакансию
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="jobsTable">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Локация</th>
+                                <th>Зарплата (BYN)</th>
+                                <th>Требования</th>
+                                <th>Дата публикации</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Applications Section -->
+            <section id="applications" class="content-section">
+                <div class="section-header">
+                    <h2>Управление заявками</h2>
+                </div>
+                
+                <!-- Filters -->
+                <div class="filters-container">
+                <div class="filter-group">
+                    <label for="statusFilter">Статус:</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">Все статусы</option>
+                        <option value="pending">Ожидает рассмотрения</option>
+                        <option value="approved">Одобрено</option>
+                        <option value="rejected">Отклонено</option>
+                    </select>
+                </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="applicationsTable">
+                        <thead>
+                            <tr>
+                                <th>ФИО</th>
+                                <th>Email</th>
+                                <th>Телефон</th>
+                                <th>Опыт</th>
+                                <th>Статус</th>
+                                <th>Дата подачи</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicationsTableBody">
+                            <!-- Applications will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <div class="section-header">
+                    <h2>Настройки сайта</h2>
+                </div>
+                
+                <form id="settingsForm" class="settings-form">
+                    <div class="form-group">
+                        <label for="siteEmail">Email сайта:</label>
+                        <input type="email" id="siteEmail" name="siteEmail" class="form-input" placeholder="info@jobfinder.ru">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sitePhone">Телефон сайта:</label>
+                        <input type="tel" id="sitePhone" name="sitePhone" class="form-input" placeholder="+7 (999) 123-45-67">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="siteAddress">Адрес сайта:</label>
+                        <input type="text" id="siteAddress" name="siteAddress" class="form-input" placeholder="г. Москва, ул. Примерная, д. 123">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="updateSettings()">
+                        <i class="fas fa-save"></i> Сохранить настройки
+                    </button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Job Modal -->
+    <div id="addJobModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Добавить вакансию</h3>
+                <span class="close" onclick="closeModal('addJobModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addJobForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="jobTitle">Название вакансии:</label>
+                        <input type="text" id="jobTitle" name="title" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobDescription">Описание:</label>
+                        <textarea id="jobDescription" name="description" class="form-textarea" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobLocation">Локация:</label>
+                        <input type="text" id="jobLocation" name="location" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobSalary">Зарплата:</label>
+                        <input type="number" id="jobSalary" name="salary" class="form-input" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobRequirements">Требования:</label>
+                        <textarea id="jobRequirements" name="Requirements" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobConditions">Условия и льготы:</label>
+                        <textarea id="jobConditions" name="Conditions_and_benefits" class="form-textarea" rows="3"></textarea>
+                    </div>
+                   <div class="form-group">
+                    <label>Фото вакансии:</label>
+                    <div id="jobImagesList"></div>
+                    <button type="button" class="btn btn-secondary" id="addJobImageBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                        <input type="file" id="jobImageInput" style="display:none;" accept="image/*" multiple>
+                    </div>
+
+
+        
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addJobModal')">Отмена</button>
+                <button class="btn btn-primary" onclick="submitAddJob()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Job Modal -->
+    <div id="editJobModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Редактировать вакансию</h3>
+                <span class="close" onclick="closeModal('editJobModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editJobForm">
+                    <input type="hidden" id="editJobId" name="editJobId">
+                    <div class="form-group">
+                        <label for="editJobTitle">Название вакансии:</label>
+                        <input type="text" id="editJobTitle" name="editJobTitle" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobDescription">Описание:</label>
+                        <textarea id="editJobDescription" name="editJobDescription" class="form-textarea" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobLocation">Локация:</label>
+                        <input type="text" id="editJobLocation" name="editJobLocation" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobSalary">Зарплата:</label>
+                        <input type="number" id="editJobSalary" name="editJobSalary" class="form-input" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobRequirements">Требования:</label>
+                        <textarea id="editJobRequirements" name="editJobRequirements" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editJobConditions">Условия и льготы:</label>
+                        <textarea id="editJobConditions" name="editJobConditions" class="form-textarea" rows="3"></textarea>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editJobModal')">Отмена</button>
+                <button class="btn btn-primary" onclick="submitEditJob()">Сохранить изменения</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application View Modal -->
+    <div id="applicationViewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Детали заявки</h3>
+                <span class="close" onclick="closeModal('applicationViewModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="application-details">
+                    <div class="detail-row">
+                        <label>ФИО:</label>
+                        <span id="appViewName">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Email:</label>
+                        <span id="appViewEmail">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Телефон:</label>
+                        <span id="appViewPhone">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Вакансия:</label>
+                        <span id="appViewJob">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Дата подачи:</label>
+                        <span id="appViewDate">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Опыт работы:</label>
+                        <span id="appViewExperience">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="approveApplicationBtn">
+                    <i class="fas fa-check"></i> Одобрить
+                </button>
+                <button class="btn btn-danger" id="rejectApplicationBtn">
+                    <i class="fas fa-times"></i> Отклонить
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('applicationViewModal')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+    <script src="/admin/static/js/admin.js"></script>
+</body>
+</html> 
+
