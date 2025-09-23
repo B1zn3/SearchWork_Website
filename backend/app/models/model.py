@@ -18,7 +18,7 @@ class Jobs(Base):
     Requirements: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     Conditions_and_benefits: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     photos: Mapped[List["JobPhoto"]] = relationship("JobPhoto", back_populates="job", cascade="all, delete-orphan", lazy="selectin")
-    applications: Mapped[List["Applications"]] = relationship('Applications', back_populates='job', lazy="select")
+    applications: Mapped[List["Applications"]] = relationship('Applications', back_populates='job', cascade="all, delete-orphan", lazy="select")
 
 class JobPhoto(Base):
     __tablename__ = "job_photos"

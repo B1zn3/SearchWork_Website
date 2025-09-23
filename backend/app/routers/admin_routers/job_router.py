@@ -7,13 +7,12 @@ from pathlib import Path
 from typing import List
 import asyncio
 
-from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse
 
 from crud.jobCRUD import jobcrud
 from crud.applicationCRUD import applicationcrud
 
-from schemas.jobSchema import JobCreateSchema
+from schemas.jobSchema import JobCreateSchema, JobUpdateSchema
 
 from services.s3.s3_interaction import s3_client
 
@@ -87,7 +86,7 @@ async def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
 @job_rout.put('/jobs/{job_id}', tags=['admin-job'], summary='update job')
 async def update_job(
     job_id: int,
-    job_data: JobCreateSchema,
+    job_data: JobUpdateSchema,
     db: Session = Depends(get_db)
 ):
     try:
@@ -106,18 +105,10 @@ async def update_job(
 @job_rout.delete('/jobs/{job_id}', tags=['admin-job'], summary='delete job')
 async def delete_job(job_id: int, db: Session = Depends(get_db)):
     try:
-        applications_count = applicationcrud.counter_application(db, job_id)
-        if applications_count > 0:
-            raise HTTPException(
-                status_code=400,
-                detail="Невозможно удалить вакансию, так как с ней связаны заявки"
-            )
-        
         photo_keys = jobcrud.get_job_photos_keys(db, job_id)
 
         if photo_keys:
             await s3_client.delete_files(photo_keys)
-
 
         job = jobcrud.remove_job(db, job_id)
         

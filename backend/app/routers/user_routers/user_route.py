@@ -7,6 +7,9 @@ from crud.applicationCRUD import applicationcrud
 from crud.settingsCRUD import settingscrud
 
 from schemas.applicationSchema import ApplicationSchema 
+from schemas.wetherSchema import WeatherSchema
+
+from services.weather_api.get_info_weather import get_weather
 
 
 user_rout = APIRouter(prefix='/main')
@@ -20,6 +23,12 @@ async def get_all_jobs(
     jobs = jobcrud.get_all(db, skip, limit)
 
     return jobs
+
+@user_rout.get('/weather-info/{latitude}/{longitude}', tags=['user'], summary='get data of weather')
+async def get_all_jobs(latitude: float,
+                       longitude: float):
+    result = await get_weather(f"{latitude} {longitude}")
+    return result
 
 @user_rout.get('/jobs/{job_id}', tags=['user'], summary='get job by id')
 async def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
